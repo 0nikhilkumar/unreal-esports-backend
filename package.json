@@ -1,0 +1,25 @@
+{
+  "name": "backend-pro-project",
+  "version": "1.0.0",
+  "main": "./index.js",
+  "type": "module",
+  "scripts": {
+    "dev":"nodemon ./src/index.js --host 0.0.0.0",
+    "start":"node ./src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.8.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
