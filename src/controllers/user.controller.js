@@ -22,9 +22,13 @@ export const userSignup = async (req, res) => {
       return res.json(new Api_Response(400, "Please fill all the fields"));
     }
 
-    const existingUser = await User.findOne({
+    const isUserExisted = await User.findOne({
       $or: [{ username }, { email }],
     });
+
+    if(isUserExisted){
+      return res.json(new Api_Response(403, "User already exists"));
+    }
 
     const user = await User.create({
       username,
@@ -39,6 +43,7 @@ export const userSignup = async (req, res) => {
     return res
       .status(201)
       .json(new Api_Response(201, "User registerd successfully"));
+
   } catch (error) {
     return res
       .status(500)
