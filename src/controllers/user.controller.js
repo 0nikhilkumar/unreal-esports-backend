@@ -1,6 +1,7 @@
 import { Api_Response } from "../utils/Api_Response.js";
 import { Api_Error } from "../utils/Api_Error.js";
 import { User } from "../models/user.models.js";
+import { blacklistedtoken } from "../models/blacklistedtoken.model.js";
 import jwt from "jsonwebtoken";
 
 const generateTokens = async (id) => {
@@ -109,12 +110,15 @@ export const logout = async (req, res) => {
     secure: true,
   };
 
+  const token = req.cookies.token;
+  await blacklistedtoken.create({ token });
+
   return res
     .status(200)
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
     .json(new Api_Response(200, {}, "User logged Out"));
-}
+};
 
 export const refreshAccessToken = async (req, res) => {
   const bodyRefreshToken = req.cookies.refreshToken || req.body.refreshToken;

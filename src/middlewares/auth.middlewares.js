@@ -1,15 +1,21 @@
 import { User } from "../models/user.models.js";
 import jwt from "jsonwebtoken";
 import { Api_Error } from "../utils/Api_Error.js";
+import { blacklistedtoken } from "../models/blacklistedtoken.model.js";
 
 export const verifyJWT = async (req, _, next) => {
-  try {
     const token =
       req.cookies?.accessToken ||
-      req.header("Authorization").replace("Bearer ", "");
+      req.headers?.authorization?.split(" ")[1];
 
     if (!token) {
       throw new Api_Error(401, "Unauthorized request");
+    }
+
+    const isBlacklisted = await blacklistedtoken.find({ token });
+
+    if (isBlacklisted.length) {
+      return res.status(401).json({ message: "Unauthorized access" });
     }
 
     const decodedTokenInformation = jwt.verify(
@@ -27,7 +33,4 @@ export const verifyJWT = async (req, _, next) => {
 
     req.user = user;
     next();
-  } catch (error) {
-    throw new Api_Error(401, error?.message || "Invalid access token");
-  }
 };

@@ -1,15 +1,17 @@
 import {Router} from 'express'
 import { userSignup,userLogin,refreshAccessToken, logout } from '../controllers/user.controller.js'
 import { verifyJWT } from '../middlewares/auth.middlewares.js';
+import zod_validate from '../middlewares/zod_validate.middleware.js';
+import { loginSchema, signupSchema } from '../Validator/userValidator.middleware.js';
 
 
-const userRouter = Router()
+const router = Router()
 
-userRouter.route('/signup').post(userSignup);
-userRouter.route('/login').post(userLogin);
-userRouter.route('/refresh').post(refreshAccessToken);
-userRouter.route('/logout').get(verifyJWT, logout);
+router.route('/signup').post(userSignup);
+router.route('/login').post(userLogin);
+router.route('/refresh').post(refreshAccessToken);
+router.route('/logout').get(verifyJWT, logout);
 
 
 
-export default userRouter
+export default router

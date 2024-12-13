@@ -20,10 +20,12 @@ app.use(cors(corsOptions));
 
 
 // INFO: Routes Import
-import userRouter from "./routes/user.routes.js"
-import roomRouter from "./routes/room.routes.js"
+import userRouter from "./routes/user.routes.js";
+import roomRouter from "./routes/room.routes.js";
+import hostRouter from "./routes/host.routes.js";
 
 app.use('/api/v1/users', userRouter);
 app.use("/api/v1/rooms", roomRouter);
+app.use("/api/v1/host", hostRouter);
 
 export default app
