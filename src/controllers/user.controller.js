@@ -42,7 +42,7 @@ export const userSignup = async (req, res) => {
 
     return res
       .status(201)
-      .json(new Api_Response(201, "User registerd successfully"));
+      .json(new Api_Response(201, "User registered successfully"));
 
   } catch (error) {
     return res
