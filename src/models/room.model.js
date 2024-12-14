@@ -4,13 +4,10 @@ const roomSchema = new mongoose.Schema({
   roomName: {
     type: String,
     required: true,
-    unique: true,
-    index: true,
   },
 
   image: {
     type: String,
-    required: true,
   },
 
   date: {
@@ -25,7 +22,7 @@ const roomSchema = new mongoose.Schema({
 
   joinedTeam: {
     type: Number,
-    required: true,
+    // required: true,
   },
 
   gameName: {
@@ -65,7 +62,7 @@ const roomSchema = new mongoose.Schema({
     hostId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-    }
+    },
 });
 
 export const Room = mongoose.model("Room", roomSchema);

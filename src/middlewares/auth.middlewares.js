@@ -1,4 +1,4 @@
-import { User } from "../models/user.models.js";
+import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { Api_Error } from "../utils/Api_Error.js";
 import { blacklistedtoken } from "../models/blacklistedtoken.model.js";

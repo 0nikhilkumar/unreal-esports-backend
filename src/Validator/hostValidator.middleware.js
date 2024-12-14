@@ -35,7 +35,6 @@ export const hostSignupSchema = z.object({
       }
     ),
 
-  refreshToken: z.string({ required_error: "must be string" }),
 });
 
 export const hostLoginSchema = z.object({

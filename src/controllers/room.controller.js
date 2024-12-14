@@ -3,6 +3,7 @@ import { Api_Response } from "../utils/Api_Response.js";
 import {Room} from '../models/room.model.js'
 import { Host } from "../models/host.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { io } from "../app.js";
 
 export const createRoom = async (req, res) => {
   try {
@@ -15,6 +16,13 @@ export const createRoom = async (req, res) => {
       tier,
       maxTeam,
     } = req.body;
+    console.log(roomName,
+      date,
+      time,
+      gameName,
+      status,
+      tier,
+      maxTeam,);
 
     if (
       [
@@ -72,6 +80,8 @@ export const createRoom = async (req, res) => {
 
     host.rooms.push(savedRoom._id);
     await host.save();
+
+    io.emit("newRoom", room);
     
     res
       .status(201)
@@ -80,3 +90,15 @@ export const createRoom = async (req, res) => {
     throw new Api_Error(400, error.message);
   }
 };
+
+export const getHostRooms = async (req, res) => {
+  try {
+    const host = await Host.findById(req?.host?._id).populate("rooms");
+    if (!host) {
+      throw new Api_Error(400, "Host not found");
+    }
+    res.status(200).json(new Api_Response(200, "Host Rooms", host.rooms));
+  } catch (error) {
+    throw new Api_Error(400, error.message);
+  }
+}

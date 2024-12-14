@@ -1,7 +1,7 @@
 import { Api_Response } from "../utils/Api_Response.js";
 import { Api_Error } from "../utils/Api_Error.js";
-import { User } from "../models/user.models.js";
 import { blacklistedtoken } from "../models/blacklistedtoken.model.js";
+import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 
 const generateTokens = async (id) => {
