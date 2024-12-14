@@ -23,9 +23,31 @@ app.use(cors(corsOptions));
 import userRouter from "./routes/user.routes.js";
 import roomRouter from "./routes/room.routes.js";
 import hostRouter from "./routes/host.routes.js";
+import { Api_Error } from "./utils/Api_Error.js"
 
 app.use('/api/v1/users', userRouter);
 app.use("/api/v1/rooms", roomRouter);
 app.use("/api/v1/host", hostRouter);
+
+
+
+// centralized error handling
+app.use((err, req, res, next) => {
+  if (err instanceof Api_Error) {
+    // Send the error to Postman
+    res.status(err.statusCode).json({
+      success: err.success,
+      message: err.message,
+      errors: err.errors,
+    });
+  } else {
+    // Handle other unknown errors
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+});
+
 
 export default app
