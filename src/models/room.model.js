@@ -47,7 +47,11 @@ const roomSchema = new mongoose.Schema({
     required: true,
   },
 
-  idp: [{
+  prize: {
+    type: Number,
+  },
+  idp: [
+    {
       id: {
         type: String,
         required: true,
@@ -58,11 +62,12 @@ const roomSchema = new mongoose.Schema({
         type: String,
         required: [true, "Password is required"],
       },
-    }],
-    hostId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
     },
+  ],
+  hostId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
 });
 
 export const Room = mongoose.model("Room", roomSchema);

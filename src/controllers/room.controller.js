@@ -15,15 +15,8 @@ export const createRoom = async (req, res) => {
       status,
       tier,
       maxTeam,
+      prize
     } = req.body;
-    console.log(roomName,
-      date,
-      time,
-      gameName,
-      status,
-      tier,
-      maxTeam,);
-
     if (
       [
         roomName,
@@ -33,6 +26,7 @@ export const createRoom = async (req, res) => {
         status,
         tier,
         maxTeam,
+        prize
       ].some((field) => field?.trim() === "")) {
       throw new Api_Error(400, "All field are required");
     }
@@ -69,6 +63,7 @@ export const createRoom = async (req, res) => {
       status,
       tier,
       maxTeam,
+      prize,
       hostId: req?.host?._id
     });
 
