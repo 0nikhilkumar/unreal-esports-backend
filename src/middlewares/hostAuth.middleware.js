@@ -30,6 +30,6 @@ export const hostVerifyJWT = async (req, _, next) => {
     return res.status(401).json(new Api_Error(401, "Unauthorized request"));
   }
 
-  req.vhost = host;
+  req.user = host;
   next();
 };
