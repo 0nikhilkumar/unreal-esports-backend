@@ -27,8 +27,6 @@ export const signupSchema = z.object({
           "Password must include at least one uppercase letter, one lowercase letter, one number, and one special character",
       }
     ),
-
-  refreshToken: z.string({ required_error: "must be string" }),
 });
 
 export const loginSchema = z

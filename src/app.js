@@ -47,7 +47,7 @@ import roomRouter from "./routes/room.routes.js";
 import hostRouter from "./routes/host.routes.js";
 import { Api_Error } from "./utils/Api_Error.js"
 
-app.use('/api/v1/users', userRouter);
+app.use('/api/v1/user', userRouter);
 app.use("/api/v1/rooms", roomRouter);
 app.use("/api/v1/host", hostRouter);
 

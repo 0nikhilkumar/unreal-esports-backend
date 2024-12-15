@@ -110,7 +110,8 @@ export const logout = async (req, res) => {
     secure: true,
   };
 
-  const token = req.cookies.token;
+  const token = req.cookies.accessToken;
+  console.log(token)
   await blacklistedtoken.create({ token });
 
   return res
