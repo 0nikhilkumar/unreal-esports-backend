@@ -35,6 +35,7 @@ export const userSignup = async (req, res) => {
       username,
       email,
       password,
+      isVerified: true
     });
 
     if (!user) {
@@ -111,7 +112,6 @@ export const logout = async (req, res) => {
   };
 
   const token = req.cookies.accessToken;
-  console.log(token)
   await blacklistedtoken.create({ token });
 
   return res
