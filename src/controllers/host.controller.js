@@ -44,7 +44,7 @@ export const register = async (req, res) => {
   
       return res
         .status(201)
-        .json(new Api_Response(201, "Host registered successfully"));
+        .json(new Api_Response(201, host, "Host registered successfully"));
   
     } catch (error) {
         return res
@@ -90,7 +90,7 @@ export const login = async (req, res) => {
     return res
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
-      .json(new Api_Response(200, { accessToken }, "Host login successfully"));
+      .json(new Api_Response(200, { getHost, accessToken }, "Host login successfully"));
 };
   
 export const logout = async (req, res) => {
@@ -118,7 +118,7 @@ export const logout = async (req, res) => {
         .status(200)
         .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
-        .json(new Api_Response(200, {}, "Host logged Out"));
+        .json(new Api_Response(200, null, "Host logged Out"));
 };
   
 export const refreshAccessToken = async (req, res) => {
