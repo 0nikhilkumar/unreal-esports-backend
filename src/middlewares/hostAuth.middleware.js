@@ -10,7 +10,7 @@ export const hostVerifyJWT = async (req, _, next) => {
   if (!token) {
     throw new Api_Error(401, "Unauthorized request");
   }
-
+  console.log("hi 1 token")
   const isBlacklisted = await blacklistedtoken.find({ token });
 
   if (isBlacklisted.length) {

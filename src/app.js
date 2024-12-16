@@ -18,6 +18,7 @@ export const io = new Server(httpServer, {
 app.use(json({limit:'16kb'}))
 app.use(urlencoded({extended:true,limit:'16kb'}))
 app.use(cookieParser())
+app.use(express.static("public"));
 
 const corsOptions = {
     origin: 'http://localhost:5173', 

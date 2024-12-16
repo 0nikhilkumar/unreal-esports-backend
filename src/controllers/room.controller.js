@@ -15,12 +15,15 @@ export const createRoom = async (req, res) => {
   ) {
     throw new Api_Error(400, "All field are required");
   }
+  console.log(req.body);
+
   const localRoomImage = req.file?.path;
   let roomImage;
   if (localRoomImage) {
     roomImage = await uploadOnCloudinary(localRoomImage, "roomImages");
+    // console.log(roomImage?.url);
 
-    if (!roomImage.url) {
+    if (!roomImage?.url) {
       throw new Api_Error(400, "roomImage not uploaded");
     }
   }
@@ -73,13 +76,13 @@ export const createRoom = async (req, res) => {
 export const getHostRooms = async (req, res) => {
   try {
     const host = await Host.aggregate([
-      { $match: { _id: req.user._id } }, 
+      { $match: { _id: req.user._id } },
       {
         $lookup: {
           from: "rooms",
-          localField: "roomsCreated", 
-          foreignField: "_id", 
-          as: "roomDetails", 
+          localField: "roomsCreated",
+          foreignField: "_id",
+          as: "roomDetails",
         },
       },
     ]);
@@ -88,6 +91,29 @@ export const getHostRooms = async (req, res) => {
       throw new Api_Error(400, "Host not found");
     }
     res.status(200).json(new Api_Response(200, "Host Rooms", host));
+  } catch (error) {
+    throw new Api_Error(400, error.message);
+  }
+};
+
+export const getHostRoomById = async (req, res) =>{
+  try {
+    const id = req.params.id;
+    if(!id){
+      throw new Api_Error(400, "Please provide the id");
+    }
+
+    const host = await Host.findById(req.user._id);
+    if(!host){
+      throw new Api_Error(400, "Host not found");
+    }
+
+    const getRoom = await Room.findOne({_id: id, hostId: req.user._id});
+    if(!getRoom){
+      throw new Api_Error(400, "Room not found");
+    }
+
+    return res.status(200).json(new Api_Response(200, "Host Rooms", getRoom));
   } catch (error) {
     throw new Api_Error(400, error.message);
   }
