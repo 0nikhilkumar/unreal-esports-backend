@@ -118,3 +118,56 @@ export const getHostRoomById = async (req, res) =>{
     throw new Api_Error(400, error.message);
   }
 };
+
+export const updateIdp = async (req, res) => {
+  const {roomId, roomPass} = req.body;  
+  const {id}  = req.params
+
+  if(!id){
+    throw new Api_Error(400, "please provide roomID")
+  }
+
+  if(!roomId || !roomPass){
+    throw new Api_Error(400,"All field are required")
+  }
+
+  const updatedIdp = await Room.findByIdAndUpdate(id,
+    {
+      idp:{
+        id:roomId,
+        password : roomPass
+      }
+    },
+    {
+      new:true
+    }
+  )
+
+  if(!updatedIdp){
+    throw new Api_Error(400,"RoomID and Password are not updated")
+  }
+
+  console.log(updatedIdp)
+
+  return res.status(200).json(
+    new Api_Response(200,updatedIdp,"RoomId and Password are Updated Successfully")
+  )
+}
+
+export const getIdp = async(req,res)=>{
+  const {id} = req.params
+  if(!id){
+    throw new Api_Error(400, "please provide roomID")
+  }
+
+  const {idp} =await Room.findById(id)
+
+  if(!idp){
+    throw new Api_Error(400,"RoomID and Password are not found")
+  }
+
+  return res.status(200).json(
+    new Api_Response(200,idp,"Idp fetched Successfully")
+  )
+
+}

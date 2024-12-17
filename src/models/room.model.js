@@ -50,20 +50,16 @@ const roomSchema = new mongoose.Schema({
   prize: {
     type: Number,
   },
-  idp: [
-    {
+  idp: {
       id: {
         type: String,
         required: true,
       },
-    },
-    {
       password: {
         type: String,
         required: [true, "Password is required"],
       },
-    },
-  ],
+  },
   hostId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
