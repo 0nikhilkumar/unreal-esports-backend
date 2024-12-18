@@ -96,6 +96,16 @@ export const getHostRooms = async (req, res) => {
   }
 };
 
+export const getPreferredNameForRooms = async (req, res)=> {
+  const getHostPreferredNameData = await Host.find().select("-password -refreshToken -roomsCreated");
+
+  if(!getHostPreferredNameData){
+    throw new Api_Error(400, "Host not found");
+  }
+
+  res.status(200).json(new Api_Response(200, getHostPreferredNameData, "PreferredNames fetched Successfully"));
+};
+
 export const getHostRoomById = async (req, res) =>{
   try {
     const id = req.params.id;
@@ -152,7 +162,7 @@ export const updateIdp = async (req, res) => {
   return res.status(200).json(
     new Api_Response(200,updatedIdp,"RoomId and Password are Updated Successfully")
   )
-}
+};
 
 export const getIdp = async(req,res)=>{
   const {id} = req.params
@@ -170,4 +180,18 @@ export const getIdp = async(req,res)=>{
     new Api_Response(200,idp,"Idp fetched Successfully")
   )
 
-}
+};
+
+export const getAllHostRooms = async (req, res) => {
+  const {id} = req.params;
+  if(!id){
+    throw new Api_Error(400, "Please provide the id");
+  }
+
+  const roomsCreated = await Host.findById(id).populate("roomsCreated").select("-password -refreshToken");
+  if(!roomsCreated){
+    throw new Api_Error(400, "Room not found");
+  }
+
+  return res.status(200).json(new Api_Response(200, roomsCreated, "All Rooms Fetched Successfully"));
+};

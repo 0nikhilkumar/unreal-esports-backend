@@ -11,6 +11,7 @@ import {
   loginSchema,
   signupSchema,
 } from "../Validator/userValidator.middleware.js";
+import { getHostRooms } from "../controllers/room.controller.js";
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.route("/signup").post(zod_validate(signupSchema), userSignup);
 router.route("/login").post(zod_validate(loginSchema), userLogin);
 router.route("/refresh").post(refreshAccessToken);
 router.route("/logout").get(verifyJWT, logout);
+
 
 export default router;

@@ -20,10 +20,12 @@ const roomSchema = new mongoose.Schema({
     required: true,
   },
 
-  joinedTeam: {
-    type: Number,
-    // required: true,
-  },
+  joinedTeam: [
+    {
+      type:mongoose.Schema.Types.ObjectId,
+      ref:'User'
+    }
+  ],
 
   gameName: {
     type: String,
@@ -53,11 +55,9 @@ const roomSchema = new mongoose.Schema({
   idp: {
       id: {
         type: String,
-        required: true,
       },
       password: {
         type: String,
-        required: [true, "Password is required"],
       },
   },
   hostId: {
