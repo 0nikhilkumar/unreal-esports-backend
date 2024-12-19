@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import mongoose, { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -30,6 +30,10 @@ const userSchema = new Schema(
     refreshToken: {
       type: String,
     },
+    joinedRooms: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Room"
+    }],
   },
   {
     timestamps: true,

@@ -3,6 +3,7 @@ import { Api_Error } from "../utils/Api_Error.js";
 import { blacklistedtoken } from "../models/blacklistedtoken.model.js";
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+import { populate } from "dotenv";
 
 const generateTokens = async (id) => {
   const user = await User.findById(id);
@@ -167,6 +168,75 @@ export const refreshAccessToken = async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json(new Api_Response(500, "Something went wrong" || error.message));
+      .json(new Api_Response(500, "Internal Server Error" || error.message));
+  }
+};
+
+
+export const userJoinRoom = async (req, res) => {
+  try {
+    const roomId = req.body.id;
+    if(!roomId){
+      return res
+      .status(400)
+      .json(new Api_Response(400, "Please provide roomID"));
+    }
+
+    const userAlreadyInJoinedRooms = await User.findOne({
+      _id: req.user._id,
+      joinedRooms: { $elemMatch: { $eq: roomId } },
+    });
+
+    if (userAlreadyInJoinedRooms) {
+      console.log("user already joined the Room.");
+      return { success: false, message: "Room already exists." };
+    }
+    else {
+      const user = await User.findByIdAndUpdate(req.user._id, {
+        $push: {
+          joinedRooms: roomId,
+        }
+      });
+  
+      if(!user){
+        return res
+        .status(400)
+        .json(new Api_Response(400, "User not found"));
+      }
+    }
+
+    return res
+      .status(200)
+      .json(new Api_Response(200, "User joined room successfully"));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new Api_Response(500, "Internal Server Error" || error.message));
+  }
+};
+
+export const getAllUserJoinedRooms = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if(!user){
+      return res
+      .status(400)
+      .json(new Api_Response(400, "User not found"));
+    }
+
+    const {joinedRooms} = await User.findById(user._id).populate({
+      path: "joinedRooms",
+      populate: {
+        path: "hostId",
+        select: "preferredName"
+      }
+    });
+    return res
+      .status(200)
+      .json(new Api_Response(200, joinedRooms, "All Rooms Fetched Successfully"));
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new Api_Response(500, "Internal Server Error" || error.message));
   }
 };

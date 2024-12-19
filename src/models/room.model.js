@@ -62,7 +62,7 @@ const roomSchema = new mongoose.Schema({
   },
   hostId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "Host",
   },
 });
 
