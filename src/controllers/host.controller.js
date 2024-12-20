@@ -95,7 +95,7 @@ export const login = async (req, res) => {
   
 export const logout = async (req, res) => {
     await Host.findByIdAndUpdate(
-      req.vhost._id,
+      req.user._id,
       {
         $unset: {
           refreshToken: 1, 

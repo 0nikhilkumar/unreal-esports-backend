@@ -3,7 +3,7 @@ import { Api_Error } from "../utils/Api_Error.js";
 import { blacklistedtoken } from "../models/blacklistedtoken.model.js";
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
-import { populate } from "dotenv";
+import { Team } from "../models/team.model.js";
 
 const generateTokens = async (id) => {
   const user = await User.findById(id);
@@ -175,6 +175,22 @@ export const refreshAccessToken = async (req, res) => {
 
 export const userJoinRoom = async (req, res) => {
   try {
+
+    const userId = req.user._id;
+    if(!userId){
+      return res
+      .status(400)
+      .json(new Api_Response(400, "Unauthorized request"));
+    }
+    
+    const isUserCreatedTeam = await Team.findOne({userId});
+
+    if(!isUserCreatedTeam){
+      return res
+      .status(400)
+      .json(new Api_Response(400, "Please create team first"));
+    }
+
     const roomId = req.body.id;
     if(!roomId){
       return res
@@ -239,4 +255,82 @@ export const getAllUserJoinedRooms = async (req, res) => {
       .status(500)
       .json(new Api_Response(500, "Internal Server Error" || error.message));
   }
+};
+
+export const createTeam = async (req, res)=> {
+
+  const userId = req.user._id;
+    if(!userId){
+      return res
+      .status(400)
+      .json(new Api_Response(400, "Unauthorized request"));
+  }
+
+  const { teamName, players } = req.body;
+
+  if(!teamName || !players){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "TeamName or players are required"));
+  }
+
+  const newTeam = new Team({
+    teamName,
+    players,
+    userId: req.user._id,
+  });
+
+  await newTeam.save();
+
+  res.status(201).json({ message: "Team created successfully"});
+};
+
+export const getUserTeam = async (req, res) => {
+
+  const userId = req.user._id;
+  if(!userId){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "Unauthorized request"));
+  }
+  
+  const getTeam = await Team.findOne({userId});
+
+  // if(!getTeam){
+  //   return res
+  //   .status(400)
+  //   .json(new Api_Response(400, "Team not found"));  
+  // }
+
+  return res
+  .status(200)
+  .json(new Api_Response(200, getTeam, "Team fetched successfully"));
+};
+
+export const updateTeam = async (req, res) => {
+
+  const userId = req.user._id;
+  if(!userId){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "Unauthorized request"));
+  }
+
+  const { teamName, players } = req.body;
+
+  const getTeam = await Team.findOne({userId});
+
+  if(!getTeam){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "Team not found"));  
+  }
+
+  await Team.findByIdAndUpdate(getTeam._id,{
+    teamName,
+    players,
+  }, {new: true});
+
+
+  res.status(201).json({ message: "Team Updated successfully"});
 };
