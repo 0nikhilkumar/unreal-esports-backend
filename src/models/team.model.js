@@ -1,87 +1,12 @@
-// import { model, Schema } from "mongoose";
+import mongoose, { model, Schema } from "mongoose";
 
-// const teamSchema = new Schema({
-//   teamName: {
-//     type: String,
-//     required: [true, "Team name is required"],
-//     unique: true,
-//     index: true,
-//     trim: true,
-//   },
-
-//   player1OwnerIGN: {
-//     type: String,
-//     required: true,
-//     unique: true,
-//     trim: true,
-//   },
-//   player1OwnerID: {
-//     type: Number,
-//     required: true,
-//     unique: true,
-//     trim: true,
-//   },
-//   player2IGN: {
-//     type: String,
-//     required: true,
-//     unique: true,
-//     trim: true,
-//   },
-//   player2ID: {
-//     type: Number,
-//     required: true,
-//     unique: true,
-//     trim: true,
-//   },
-//   player3IGN: {
-//     type: String,
-//     required: true,
-//     unique: true,
-//     trim: true,
-//   },
-//   player3ID: {
-//     type: Number,
-//     required: true,
-//     unique: true,
-//     trim: true,
-//   },
-//   player4IGN: {
-//     type: String,
-//     required: true,
-//     unique: true,
-//     trim: true,
-//   },
-//   player4ID: {
-//     type: Number,
-//     required: true,
-//     unique: true,
-//     trim: true,
-//   },
-//   player5IGN: {
-//     type: String,
-//     unique: true,
-//     trim: true,
-//   },
-//   player5ID: {
-//     type: Number,
-//     unique: true,
-//     trim: true,
-//   },
-// });
-
-// export const Team = new model("Team", teamSchema);
-
-
-
-import mongoose, { model, mongo, Schema } from "mongoose";
-
+// Team Schema
 const teamSchema = new Schema({
   teamName: {
     type: String,
     required: [true, "Team name is required"],
     unique: true,
     index: true,
-    trim: true,
   },
   players: [
     {
@@ -92,23 +17,60 @@ const teamSchema = new Schema({
       ign: {
         type: String,
         unique: true,
-        trim: true,
+        sparse: true, // Ensures uniqueness at the database level
+        default: null,
       },
       igId: {
         type: Number,
         unique: true,
-        trim: true,
+        sparse: true, // Ensures uniqueness at the database level
+        default: null,
       },
       email: {
         type: String,
         unique: true,
-      }
+        sparse: true, // Ensures uniqueness at the database level
+        default: null,
+        match: [/^\S+@\S+\.\S+$/, "Invalid email format"], // Email validation
+      },
     },
   ],
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-  }
+  },
 });
+
+// Create Partial Indexes in MongoDB for the players subdocument
+teamSchema.index(
+  { "players.ign": 1 },
+  { unique: true, partialFilterExpression: { "players.ign": { $ne: null } } }
+);
+
+teamSchema.index(
+  { "players.igId": 1 },
+  { unique: true, partialFilterExpression: { "players.igId": { $ne: null } } }
+);
+
+teamSchema.index(
+  { "players.email": 1 },
+  { unique: true, partialFilterExpression: { "players.email": { $ne: null } } }
+);
+
+// Middleware for validation
+teamSchema.pre("save", function (next) {
+  const players = this.players || [];
+  
+  // Validate player data
+  players.forEach((player) => {
+    if (player.playerNumber !== 5) {
+      if (!player.ign || !player.igId || !player.email) {
+        return next(new Error(`ign, igId, and email are required for players other than Player 5`));
+      }
+    }
+  });
+  next();
+});
+
 
 export const Team = new model("Team", teamSchema);

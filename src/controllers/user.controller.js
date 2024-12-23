@@ -180,7 +180,7 @@ export const userJoinRoom = async (req, res) => {
     if(!userId){
       return res
       .status(400)
-      .json(new Api_Response(400, "Unauthorized request"));
+      .json(new Api_Response(400, null, "Unauthorized request"));
     }
     
     const isUserCreatedTeam = await Team.findOne({userId});
@@ -188,14 +188,14 @@ export const userJoinRoom = async (req, res) => {
     if(!isUserCreatedTeam){
       return res
       .status(400)
-      .json(new Api_Response(400, "Please create team first"));
+      .json(new Api_Response(400, null, "Please create team first"));
     }
 
     const roomId = req.body.id;
     if(!roomId){
       return res
       .status(400)
-      .json(new Api_Response(400, "Please provide roomID"));
+      .json(new Api_Response(400, null, "Please provide roomID"));
     }
 
     const userAlreadyInJoinedRooms = await User.findOne({
@@ -204,8 +204,9 @@ export const userJoinRoom = async (req, res) => {
     });
 
     if (userAlreadyInJoinedRooms) {
-      console.log("user already joined the Room.");
-      return { success: false, message: "Room already exists." };
+      return res
+      .status(403)
+      .json(new Api_Response(403, null, "User Already joined this room"));;
     }
     else {
       const user = await User.findByIdAndUpdate(req.user._id, {
@@ -217,13 +218,13 @@ export const userJoinRoom = async (req, res) => {
       if(!user){
         return res
         .status(400)
-        .json(new Api_Response(400, "User not found"));
+        .json(new Api_Response(400, null, "User not found"));
       }
     }
 
     return res
       .status(200)
-      .json(new Api_Response(200, "User joined room successfully"));
+      .json(new Api_Response(200, null, "User joined room successfully"));
   } catch (error) {
     return res
       .status(500)
@@ -313,7 +314,7 @@ export const updateTeam = async (req, res) => {
   if(!userId){
     return res
     .status(400)
-    .json(new Api_Response(400, "Unauthorized request"));
+    .json(new Api_Response(400, null, "Unauthorized request"));
   }
 
   const { teamName, players } = req.body;
@@ -323,7 +324,7 @@ export const updateTeam = async (req, res) => {
   if(!getTeam){
     return res
     .status(400)
-    .json(new Api_Response(400, "Team not found"));  
+    .json(new Api_Response(400, null, "Team not found"));  
   }
 
   await Team.findByIdAndUpdate(getTeam._id,{

@@ -3,14 +3,13 @@ import jwt from "jsonwebtoken";
 import { Api_Error } from "../utils/Api_Error.js";
 import { blacklistedtoken } from "../models/blacklistedtoken.model.js";
 
-export const hostVerifyJWT = async (req, _, next) => {
+export const hostVerifyJWT = async (req, res, next) => {
   const token =
     req.cookies?.accessToken || req.headers?.authorization?.split(" ")[1];
 
   if (!token) {
     throw new Api_Error(401, "Unauthorized request");
   }
-  console.log("hi 1 token")
   const isBlacklisted = await blacklistedtoken.find({ token });
 
   if (isBlacklisted.length) {

@@ -1,5 +1,8 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
+import { config } from "dotenv";
+
+config({path: "./.env"});
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -10,12 +13,10 @@ cloudinary.config({
 const uploadOnCloudinary = async (localFilePath, foldername) => {
   try {
     if (!localFilePath) return null;
-    console.log(localFilePath, foldername);
     const response = await cloudinary.uploader.upload(localFilePath, {
       folder: `unrealesports/${foldername}`,
       resource_type: "auto",
     });
-    console.log(response);
     fs.unlinkSync(localFilePath);
     return response;
   } catch (error) {
