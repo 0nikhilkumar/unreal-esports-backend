@@ -13,6 +13,7 @@ router.route("/getHostRoom").get(verifyJWT, getHostRooms);
 router.route("/get-room/:id").get(hostVerifyJWT, getHostRoomById);
 router.route("/update-idp/:id").patch(hostVerifyJWT, updateIdp);
 router.route("/get-idp/:id").get(hostVerifyJWT, getIdp);
+router.route("/user-get-idp/:id").get(verifyJWT, getIdp);
 router.route("/get-preferredName").get(getPreferredNameForRooms);
 router.route("/getAllHostRooms/:id").get(getAllHostRooms);
 

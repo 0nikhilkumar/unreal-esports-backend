@@ -4,6 +4,7 @@ import { blacklistedtoken } from "../models/blacklistedtoken.model.js";
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { Team } from "../models/team.model.js";
+import { Room } from "../models/room.model.js";
 
 const generateTokens = async (id) => {
   const user = await User.findById(id);
@@ -219,6 +220,20 @@ export const userJoinRoom = async (req, res) => {
         return res
         .status(400)
         .json(new Api_Response(400, null, "User not found"));
+      }
+
+      const getTeam = await Team.findOne({userId: req.user._id});
+
+      const addTeamInThatParticularRoom = await Room.findByIdAndUpdate(roomId, {
+        $push: {
+          joinedTeam: getTeam._id,
+        }
+      });
+
+      if(!addTeamInThatParticularRoom){
+        return res
+        .status(400)
+        .json(new Api_Response(400, null, "Something went wrong join this room"));  
       }
     }
 

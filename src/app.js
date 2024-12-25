@@ -1,12 +1,11 @@
+import cookieParser from "cookie-parser";
+import cors from 'cors';
 import { config } from "dotenv";
+import express, { json, urlencoded } from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { Api_Error } from "./utils/Api_Error.js";
 config({ path: "./.env" });
-import express, { json, urlencoded } from "express"
-import cookieParser from "cookie-parser"
-import cors from 'cors'
-import { Api_Error } from "./utils/Api_Error.js"
-import {createServer} from "http"
-import {Server} from "socket.io";
-import jwt from "jsonwebtoken"
 
 
 const app = express()
@@ -43,14 +42,27 @@ export const io = new Server(httpServer, {
 // });
 
 
-io.on('connection', socket => {
-  console.log('a user connected', socket.id);
+// io.on("connection", (socket) => {
+//   console.log("A user connected.");
 
+//   // User joins a room
+//   socket.on("joinRoom", (roomId) => {
+//     if (!rooms[roomId]) {
+//       rooms[roomId] = { joined: 0, maxTeam: 10 }; // Example data
+//     }
 
-  socket.on('disconnect', () => {
-    console.log('A user disconnected', socket.id);  
-  })
-});
+//     if (rooms[roomId].joined < rooms[roomId].maxTeam) {
+//       rooms[roomId].joined += 1;
+//       io.emit("updateCapacity", { roomId, joined: rooms[roomId].joined });
+//     } else {
+//       socket.emit("roomFull", "The room is full.");
+//     }
+//   });
+
+//   socket.on("disconnect", () => {
+//     console.log("A user disconnected.");
+//   });
+// });
 
 // NOTE: Middlewares
 app.use(json({limit:'30kb'}))
@@ -69,9 +81,9 @@ app.use(cors(corsOptions));
 
 
 // INFO: Routes Import
-import userRouter from "./routes/user.routes.js";
-import roomRouter from "./routes/room.routes.js";
 import hostRouter from "./routes/host.routes.js";
+import roomRouter from "./routes/room.routes.js";
+import userRouter from "./routes/user.routes.js";
 
 
 app.use('/api/v1/user', userRouter);

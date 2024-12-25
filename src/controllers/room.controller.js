@@ -166,19 +166,19 @@ export const updateIdp = async (req, res) => {
 };
 
 export const getIdp = async(req,res)=>{
-  const {id} = req.params
+  const id = req.params.id
   if(!id){
     throw new Api_Error(400, "please provide roomID")
   }
 
-  const {idp} =await Room.findById(id)
+  const room = await Room.findById(id)
 
-  if(!idp){
+  if(!room){
     throw new Api_Error(400,"RoomID and Password are not found")
   }
 
   return res.status(200).json(
-    new Api_Response(200,idp,"Idp fetched Successfully")
+    new Api_Response(200,room,"Idp fetched Successfully")
   )
 
 };
