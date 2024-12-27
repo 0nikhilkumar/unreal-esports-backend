@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { Api_Error } from "../utils/Api_Error.js";
 import { blacklistedtoken } from "../models/blacklistedtoken.model.js";
 
-export const verifyJWT = async (req, _, next) => {
+export const verifyJWT = async (req, res, next) => {
     const token =
       req.cookies?.accessToken ||
       req.headers?.authorization?.split(" ")[1];

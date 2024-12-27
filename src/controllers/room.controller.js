@@ -69,7 +69,7 @@ export const createRoom = async (req, res) => {
     // host.rooms.push(savedRoom._id);
     // await host.save();
   
-    io.emit("newRoom", room);
+    // io.emit("newRoom", room);
   
     res.status(201).json(new Api_Response(201, "Room Created Successfully"));
 };

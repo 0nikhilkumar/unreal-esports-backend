@@ -64,6 +64,15 @@ export const io = new Server(httpServer, {
 //   });
 // });
 
+io.on("connection", (socket) => {
+  console.log("New client connected");
+
+  socket.on("room-create", (data) => {
+    socket.broadcast.emit("room-update", data); // Notify all users except the sender
+    console.log("Room created/updated:", data);
+  });
+});
+
 // NOTE: Middlewares
 app.use(json({limit:'30kb'}))
 app.use(urlencoded({extended:true,limit:'16kb'}))

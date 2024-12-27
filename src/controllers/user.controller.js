@@ -176,7 +176,6 @@ export const refreshAccessToken = async (req, res) => {
 
 export const userJoinRoom = async (req, res) => {
   try {
-
     const userId = req.user._id;
     if(!userId){
       return res
@@ -271,6 +270,27 @@ export const getAllUserJoinedRooms = async (req, res) => {
       .status(500)
       .json(new Api_Response(500, "Internal Server Error" || error.message));
   }
+};
+
+export const getHostRoomById = async (req, res) =>{
+    const id = req.params.id;
+    if(!id){
+      throw new Api_Error(400, null, "Please provide the id");
+    }
+
+
+    const user = await User.findById(req.user._id);
+    if(!user){
+      throw new Api_Error(400,null, "User not found");
+    }
+
+    const getRoom = await Room.findById(id);
+    if(!getRoom){
+      throw new Api_Error(400,null, "Room not found");
+    }
+
+    return res.status(200).json(new Api_Response(200, getRoom, "Host Room"));
+
 };
 
 export const createTeam = async (req, res)=> {
