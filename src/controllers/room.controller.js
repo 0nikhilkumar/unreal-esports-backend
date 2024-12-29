@@ -6,17 +6,17 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { io } from "../app.js";
 
 export const createRoom = async (req, res) => {
+  const { roomName, date, time, gameName, status, tier, maxTeam, prize } =
+    req.body;
+  if (
+    [roomName, date, time, gameName, status, tier, maxTeam, prize].some(
+      (field) => field?.trim() === ""
+    )
+  ) {
+    throw new Api_Error(400, "All field are required");
+  }
 
-    const { roomName, date, time, gameName, status, tier, maxTeam, prize } = req.body;
-    if (
-      [roomName, date, time, gameName, status, tier, maxTeam, prize].some(
-        (field) => field?.trim() === ""
-      )
-    ) {
-      throw new Api_Error(400, "All field are required");
-    }
-
-    console.log(req.body);
+  console.log(req.body);
 
     const existedRoom = await Room.findOne({
       $and: [{ roomName }, { date }, { time }, { tier }],
@@ -97,30 +97,40 @@ export const getHostRooms = async (req, res) => {
   }
 };
 
-export const getPreferredNameForRooms = async (req, res)=> {
-  const getHostPreferredNameData = await Host.find().select("-password -refreshToken -roomsCreated");
+export const getPreferredNameForRooms = async (req, res) => {
+  const getHostPreferredNameData = await Host.find().select(
+    "-password -refreshToken -roomsCreated"
+  );
 
-  if(!getHostPreferredNameData){
+  if (!getHostPreferredNameData) {
     throw new Api_Error(400, "Host not found");
   }
 
-  res.status(200).json(new Api_Response(200, getHostPreferredNameData, "PreferredNames fetched Successfully"));
+  res
+    .status(200)
+    .json(
+      new Api_Response(
+        200,
+        getHostPreferredNameData,
+        "PreferredNames fetched Successfully"
+      )
+    );
 };
 
-export const getHostRoomById = async (req, res) =>{
+export const getHostRoomById = async (req, res) => {
   try {
     const id = req.params.id;
-    if(!id){
+    if (!id) {
       throw new Api_Error(400, "Please provide the id");
     }
 
     const host = await Host.findById(req.user._id);
-    if(!host){
+    if (!host) {
       throw new Api_Error(400, "Host not found");
     }
 
-    const getRoom = await Room.findOne({_id: id, hostId: req.user._id});
-    if(!getRoom){
+    const getRoom = await Room.findOne({ _id: id, hostId: req.user._id });
+    if (!getRoom) {
       throw new Api_Error(400, "Room not found");
     }
 
@@ -131,68 +141,109 @@ export const getHostRoomById = async (req, res) =>{
 };
 
 export const updateIdp = async (req, res) => {
-  const {roomId, roomPass} = req.body;  
-  const {id}  = req.params
+  const { roomId, roomPass } = req.body;
+  const { id } = req.params;
 
-  if(!id){
-    throw new Api_Error(400, "please provide roomID")
+  if (!id) {
+    throw new Api_Error(400, "please provide roomID");
   }
 
-  if(!roomId || !roomPass){
-    throw new Api_Error(400,"All field are required")
+  if (!roomId || !roomPass) {
+    throw new Api_Error(400, "All field are required");
   }
 
-  const updatedIdp = await Room.findByIdAndUpdate(id,
+  const updatedIdp = await Room.findByIdAndUpdate(
+    id,
     {
-      idp:{
-        id:roomId,
-        password : roomPass
-      }
+      idp: {
+        id: roomId,
+        password: roomPass,
+      },
     },
     {
-      new:true
+      new: true,
     }
-  )
+  );
 
-  if(!updatedIdp){
-    throw new Api_Error(400,"RoomID and Password are not updated")
+  if (!updatedIdp) {
+    throw new Api_Error(400, "RoomID and Password are not updated");
   }
 
-  console.log(updatedIdp)
+  console.log(updatedIdp);
 
-  return res.status(200).json(
-    new Api_Response(200,updatedIdp,"RoomId and Password are Updated Successfully")
-  )
+  return res
+    .status(200)
+    .json(
+      new Api_Response(
+        200,
+        updatedIdp,
+        "RoomId and Password are Updated Successfully"
+      )
+    );
 };
 
-export const getIdp = async(req,res)=>{
-  const id = req.params.id
-  if(!id){
-    throw new Api_Error(400, "please provide roomID")
+export const getIdp = async (req, res) => {
+  const id = req.params.id;
+  if (!id) {
+    throw new Api_Error(400, "please provide roomID");
   }
 
-  const room = await Room.findById(id)
+  const room = await Room.findById(id);
 
-  if(!room){
-    throw new Api_Error(400,"RoomID and Password are not found")
+  if (!room) {
+    throw new Api_Error(400, "RoomID and Password are not found");
   }
 
-  return res.status(200).json(
-    new Api_Response(200,room,"Idp fetched Successfully")
-  )
-
+  return res
+    .status(200)
+    .json(new Api_Response(200, room, "Idp fetched Successfully"));
 };
 
 export const getAllHostRooms = async (req, res) => {
-  const {id} = req.params;
-  if(!id){
+  const { id } = req.params;
+  if (!id) {
     throw new Api_Error(400, "Please provide the id");
   }
 
-  const roomsCreated = await Host.findById(id).populate("roomsCreated").select("-password -refreshToken");
-  if(!roomsCreated){
+  const roomsCreated = await Host.findById(id)
+    .populate("roomsCreated")
+    .select("-password -refreshToken");
+  if (!roomsCreated) {
     throw new Api_Error(400, "Room not found");
   }
 
-  return res.status(200).json(new Api_Response(200, roomsCreated, "All Rooms Fetched Successfully"));
+  return res
+    .status(200)
+    .json(
+      new Api_Response(200, roomsCreated, "All Rooms Fetched Successfully")
+    );
 };
+
+export const updateStatus = async (req, res) => {
+  const { id } = req.params; 
+  const { status } = req.body;
+  
+  if (!id || !status) {
+    return res.status(400).json(new Api_Response(400, "Please provide the id and status"));
+  }
+
+  try {
+    const roomStatus = await Room.findByIdAndUpdate(
+      id, 
+      { status },
+      { new: true } 
+    );
+
+    console.log(roomStatus)
+    if (!roomStatus) {
+      throw new Api_Error(400, "Room Status Not Found");
+    }
+
+    return res
+      .status(200)
+      .json(new Api_Response(200, roomStatus, "Room Status Updated Successfully"));
+  } catch (error) {
+    throw new Api_Error(400, error.message);
+  }
+};
+
