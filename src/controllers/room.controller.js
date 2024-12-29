@@ -148,9 +148,9 @@ export const updateIdp = async (req, res) => {
     throw new Api_Error(400, "please provide roomID");
   }
 
-  if (!roomId || !roomPass) {
-    throw new Api_Error(400, "All field are required");
-  }
+  // if (!roomId || !roomPass) {
+  //   throw new Api_Error(400, "All field are required");
+  // }
 
   const updatedIdp = await Room.findByIdAndUpdate(
     id,
@@ -234,7 +234,6 @@ export const updateStatus = async (req, res) => {
       { new: true } 
     );
 
-    console.log(roomStatus)
     if (!roomStatus) {
       throw new Api_Error(400, "Room Status Not Found");
     }

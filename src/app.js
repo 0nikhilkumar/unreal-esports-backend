@@ -65,9 +65,19 @@ io.on("connection", (socket) => {
   console.log("New client connected");
 
   socket.on("room-create", (data) => {
-    socket.broadcast.emit("room-update", data); // Notify all users except the sender
+    socket.broadcast.emit("room-update", data); 
     console.log("Room created/updated:", data);
   });
+
+  socket.on("toggle-status",(data)=>{
+    socket.broadcast.emit("updated-status", data);
+    console.log("Room statusUpdated", data);
+  })
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
+  });
+
 });
 
 // NOTE: Middlewares
@@ -88,6 +98,7 @@ app.use(cors(corsOptions));
 import hostRouter from "./routes/host.routes.js";
 import roomRouter from "./routes/room.routes.js";
 import userRouter from "./routes/user.routes.js";
+import { SocketAddress } from "net";
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/rooms", roomRouter);
