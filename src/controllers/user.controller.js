@@ -370,3 +370,8 @@ export const updateTeam = async (req, res) => {
 
   res.status(201).json({ message: "Team Updated successfully"});
 };
+
+
+export const checkAuth = (req, res) => {
+  res.json({ isAuthenticated: true });
+};
