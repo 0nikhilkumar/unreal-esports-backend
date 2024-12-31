@@ -61,24 +61,76 @@ export const io = new Server(httpServer, {
 //   });
 // });
 
-io.on("connection", (socket) => {
-  console.log("New client connected");
+// io.on("connection", (socket) => {
+//   console.log("New client connected");
 
-  socket.on("room-create", (data) => {
-    socket.broadcast.emit("room-update", data); 
-    console.log("Room created/updated:", data);
+//   socket.on("room-create", (data) => {
+//     socket.broadcast.emit("room-update", data); 
+//     console.log("Room created/updated:", data);
+//   });
+
+//   socket.on("toggle-status",(data)=>{
+//     socket.broadcast.emit("updated-status", data);
+//     console.log("Room statusUpdated", data);
+//   })
+
+//   socket.on("disconnect", () => {
+//     console.log("Client disconnected");
+//   });
+
+// });
+
+
+const roomUsers = {};
+
+io.on('connection', (socket) => {
+  console.log('New client connected');
+
+  socket.on('join-room', (roomId) => {
+    socket.join(roomId);
+    if (!roomUsers[roomId]) {
+      roomUsers[roomId] = new Set();
+    }
+    roomUsers[roomId].add(socket.id);
+    io.to(roomId).emit('online-users', Math.abs(roomUsers[roomId].size-1));
+    console.log(`User joined room ${roomId}. Total users: ${Math.abs(roomUsers[roomId].size-1)}`);
   });
 
-  socket.on("toggle-status",(data)=>{
-    socket.broadcast.emit("updated-status", data);
-    console.log("Room statusUpdated", data);
-  })
-
-  socket.on("disconnect", () => {
-    console.log("Client disconnected");
+  socket.on('room-create', (data) => {
+    socket.to(data.roomId).emit('room-update', data);
+    console.log('Room created/updated:', data);
   });
 
+  socket.on('toggle-status', (data) => {
+    socket.to(data.id).emit('updated-status', data);
+    console.log('Room status updated', data);
+  });
+
+  socket.on('leave-room', (roomId) => {
+    leaveRoom(socket, roomId);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+    for (const roomId in roomUsers) {
+      if (roomUsers[roomId].has(socket.id)) {
+        leaveRoom(socket, roomId);
+      }
+    }
+  });
 });
+
+function leaveRoom(socket, roomId) {
+  if (roomUsers[roomId]) {
+    roomUsers[roomId].delete(socket.id);
+    socket.leave(roomId);
+    io.to(roomId).emit('online-users',Math.abs(roomUsers[roomId].size-1));
+    console.log(`User left room ${roomId}. Total users: ${Math.abs(roomUsers[roomId].size-1)}`);
+    if (roomUsers[roomId].size === 0) {
+      delete roomUsers[roomId];
+    }
+  }
+}
 
 // NOTE: Middlewares
 app.use(json({ limit: "30kb" }));
