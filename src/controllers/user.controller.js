@@ -92,7 +92,7 @@ export const userLogin = async (req, res) => {
   return res
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json(new Api_Response(200, getUser, "User login successfully"));
+    .json(new Api_Response(200,{accessToken, user: getUser}, "User login successfully"));
 };
 
 export const logout = async (req, res) => {

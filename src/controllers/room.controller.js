@@ -1,9 +1,8 @@
+import { Host } from "../models/host.model.js";
+import { Room } from "../models/room.model.js";
 import { Api_Error } from "../utils/Api_Error.js";
 import { Api_Response } from "../utils/Api_Response.js";
-import { Room } from "../models/room.model.js";
-import { Host } from "../models/host.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
-import { io } from "../app.js";
 
 export const createRoom = async (req, res) => {
   const { roomName, date, time, gameName, status, tier, maxTeam, prize } =
@@ -129,7 +128,7 @@ export const getHostRoomById = async (req, res) => {
       throw new Api_Error(400, "Host not found");
     }
 
-    const getRoom = await Room.findOne({ _id: id, hostId: req.user._id });
+    const getRoom = await Room.findOne({ _id: id, hostId: req.user._id }).populate("joinedTeam");
     if (!getRoom) {
       throw new Api_Error(400, "Room not found");
     }

@@ -2,6 +2,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { config } from "dotenv";
 import express, { json, urlencoded } from "express";
+import helmet from "helmet";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { Api_Error } from "./utils/Api_Error.js";
@@ -16,69 +17,6 @@ export const io = new Server(httpServer, {
     credentials: true,
   },
 });
-
-// io.use((socket, next) => {
-//   try {
-//     const token = socket.handshake.auth?.accessToken || socket.handshake.headers?.authorization?.split(" ")[1];
-
-//     if(!token){
-//       return next(new Api_Error(401, "Authentication error"));
-//     }
-
-//     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET_KEY);
-
-//     if(!decoded){
-//       return next(new Api_Error(401, "Authentication error"));
-//     }
-
-//     socket.user = decoded;
-
-//     next();
-//   } catch (error) {
-//     next(error);
-//   }
-// });
-
-// io.on("connection", (socket) => {
-//   console.log("A user connected.");
-
-//   // User joins a room
-//   socket.on("joinRoom", (roomId) => {
-//     if (!rooms[roomId]) {
-//       rooms[roomId] = { joined: 0, maxTeam: 10 }; // Example data
-//     }
-
-//     if (rooms[roomId].joined < rooms[roomId].maxTeam) {
-//       rooms[roomId].joined += 1;
-//       io.emit("updateCapacity", { roomId, joined: rooms[roomId].joined });
-//     } else {
-//       socket.emit("roomFull", "The room is full.");
-//     }
-//   });
-
-//   socket.on("disconnect", () => {
-//     console.log("A user disconnected.");
-//   });
-// });
-
-// io.on("connection", (socket) => {
-//   console.log("New client connected");
-
-//   socket.on("room-create", (data) => {
-//     socket.broadcast.emit("room-update", data); 
-//     console.log("Room created/updated:", data);
-//   });
-
-//   socket.on("toggle-status",(data)=>{
-//     socket.broadcast.emit("updated-status", data);
-//     console.log("Room statusUpdated", data);
-//   })
-
-//   socket.on("disconnect", () => {
-//     console.log("Client disconnected");
-//   });
-
-// });
 
 
 const roomUsers = {};
@@ -137,6 +75,7 @@ app.use(json({ limit: "30kb" }));
 app.use(urlencoded({ extended: true, limit: "16kb" }));
 app.use(cookieParser());
 app.use(express.static("public"));
+app.use(helmet());
 
 const corsOptions = {
   origin: "http://localhost:5173",
@@ -150,7 +89,6 @@ app.use(cors(corsOptions));
 import hostRouter from "./routes/host.routes.js";
 import roomRouter from "./routes/room.routes.js";
 import userRouter from "./routes/user.routes.js";
-import { SocketAddress } from "net";
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/rooms", roomRouter);

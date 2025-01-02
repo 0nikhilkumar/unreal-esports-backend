@@ -22,8 +22,8 @@ const roomSchema = new mongoose.Schema({
 
   joinedTeam: [
     {
-      type:mongoose.Schema.Types.ObjectId,
-      ref:'User'
+      type: mongoose.Schema.Types.ObjectId,
+      ref:'Team'
     }
   ],
 

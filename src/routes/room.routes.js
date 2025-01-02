@@ -1,7 +1,7 @@
 import express from "express";
-import { createRoom, getHostRooms,getPreferredNameForRooms, getHostRoomById, updateIdp, getIdp, getAllHostRooms, updateStatus } from "../controllers/room.controller.js";
-import { hostVerifyJWT } from "../middlewares/hostAuth.middleware.js";
+import { createRoom, getAllHostRooms, getHostRoomById, getHostRooms, getIdp, getPreferredNameForRooms, updateIdp, updateStatus } from "../controllers/room.controller.js";
 import { verifyJWT } from "../middlewares/auth.middlewares.js";
+import { hostVerifyJWT } from "../middlewares/hostAuth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 // import { upload } from "../middlewares/multer.middleware.js";
 
@@ -17,5 +17,6 @@ router.route("/update-status/:id").patch(hostVerifyJWT, updateStatus);
 router.route("/user-get-idp/:id").get(verifyJWT, getIdp);
 router.route("/get-preferredName").get(getPreferredNameForRooms);
 router.route("/getAllHostRooms/:id").get(getAllHostRooms);
+
 
 export default router;
