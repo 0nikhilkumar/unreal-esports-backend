@@ -10,6 +10,7 @@ const teamSchema = new Schema({
   },
   players: [
     {
+      _id:false,
       playerNumber: {
         type: Number,
         required: true,

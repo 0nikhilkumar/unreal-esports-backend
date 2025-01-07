@@ -223,11 +223,15 @@ export const userJoinRoom = async (req, res) => {
 
       const getTeam = await Team.findOne({userId: req.user._id});
 
-      const addTeamInThatParticularRoom = await Room.findByIdAndUpdate(roomId, {
-        $push: {
-          joinedTeam: getTeam._id,
-        }
-      });
+      const addTeamInThatParticularRoom = await Room.findByIdAndUpdate(
+        roomId,
+        {
+          $push: {
+            joinedTeam: { teamId: getTeam._id },
+          },
+        },
+        { new: true } 
+      );
 
       if(!addTeamInThatParticularRoom){
         return res
@@ -262,6 +266,7 @@ export const getAllUserJoinedRooms = async (req, res) => {
         select: "preferredName"
       }
     });
+
     return res
       .status(200)
       .json(new Api_Response(200, joinedRooms, "All Rooms Fetched Successfully"));

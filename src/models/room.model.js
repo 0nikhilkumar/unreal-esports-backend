@@ -22,8 +22,14 @@ const roomSchema = new mongoose.Schema({
 
   joinedTeam: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref:'Team'
+      _id: false,
+      teamId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref:'Team'
+      },
+      slot: {
+        type: String,
+      }
     }
   ],
 
@@ -64,6 +70,10 @@ const roomSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Host",
   },
+  leaderboard: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Leaderboard",
+  }
 });
 
 export const Room = mongoose.model("Room", roomSchema);

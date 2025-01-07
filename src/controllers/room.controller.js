@@ -128,7 +128,7 @@ export const getHostRoomById = async (req, res) => {
       throw new Api_Error(400, "Host not found");
     }
 
-    const getRoom = await Room.findOne({ _id: id, hostId: req.user._id }).populate("joinedTeam");
+    const getRoom = await Room.findOne({ _id: id, hostId: req.user._id }).populate("joinedTeam.teamId");
     if (!getRoom) {
       throw new Api_Error(400, "Room not found");
     }
@@ -244,4 +244,3 @@ export const updateStatus = async (req, res) => {
     throw new Api_Error(400, error.message);
   }
 };
-
