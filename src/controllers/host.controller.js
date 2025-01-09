@@ -315,6 +315,10 @@ export const getUpdateLeaderboardData = async (req, res) => {
       .status(500)
       .json({ error: "An error occurred while fetching the leaderboard." });
   }
-}
+};
+
+export const checkAuth = (req, res) => {
+  return res.status(200).json({ isAuthenticated: true });
+};
 
 

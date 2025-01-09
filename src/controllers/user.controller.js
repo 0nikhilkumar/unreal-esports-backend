@@ -173,7 +173,6 @@ export const refreshAccessToken = async (req, res) => {
   }
 };
 
-
 export const userJoinRoom = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -378,5 +377,5 @@ export const updateTeam = async (req, res) => {
 
 
 export const checkAuth = (req, res) => {
-  res.json({ isAuthenticated: true });
+  return res.status(200).json({ isAuthenticated: true });
 };

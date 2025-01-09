@@ -14,6 +14,7 @@ import {
   hostLoginSchema,
   hostSignupSchema,
 } from "../Validator/hostValidator.middleware.js";
+import { checkAuth } from "../controllers/host.controller.js";
 
 const router = Router();
 
@@ -21,6 +22,8 @@ router.route("/register").post(zod_validate(hostSignupSchema), register);
 router.route("/login").post(zod_validate(hostLoginSchema), login);
 router.route("/refresh").post(refreshAccessToken);
 router.route("/logout").get(hostVerifyJWT, logout);
+router.route("/check-auth").get(hostVerifyJWT, checkAuth);
+
 
 router.route("/update-slot/:id").patch(hostVerifyJWT, updateSlotToTeam);
 router.route("/update-leaderboard/:id").patch(hostVerifyJWT, updateLeaderboardData);
