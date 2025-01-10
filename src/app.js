@@ -89,10 +89,12 @@ app.use(cors(corsOptions));
 import hostRouter from "./routes/host.routes.js";
 import roomRouter from "./routes/room.routes.js";
 import userRouter from "./routes/user.routes.js";
+import { validateProtectedToken } from "./middlewares/validateToken.js";
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/rooms", roomRouter);
 app.use("/api/v1/host", hostRouter);
+app.route("/api/v1/validate-token").get( validateProtectedToken);
 
 // centralized error handling
 app.use((err, req, res, next) => {

@@ -18,7 +18,7 @@ import {
   loginSchema,
   signupSchema,
 } from "../Validator/userValidator.middleware.js";
-import { getHostRooms } from "../controllers/room.controller.js";
+import { validateProtectedToken } from "../middlewares/validateToken.js";
 
 const router = Router();
 
@@ -35,6 +35,7 @@ router.route("/get-room/:id").get(verifyJWT, getHostRoomById);
 router.route("/create-team").post(verifyJWT, createTeam);
 router.route("/get-team").get(verifyJWT, getUserTeam);
 router.route("/update-team").patch(verifyJWT, updateTeam);
+
 
 
 export default router;
