@@ -5,10 +5,10 @@ import { Api_Response } from "../utils/Api_Response.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 export const createRoom = async (req, res) => {
-  const { roomName, date, time, gameName, status, tier, maxTeam, prize } =
+  const { roomName, date, time, gameName,gameMap, status, tier, maxTeam, prize } =
     req.body;
   if (
-    [roomName, date, time, gameName, status, tier, maxTeam, prize].some(
+    [roomName, date, time, gameName, gameMap, status, tier, maxTeam, prize].some(
       (field) => field?.trim() === ""
     )
   ) {
@@ -42,6 +42,7 @@ export const createRoom = async (req, res) => {
       date,
       time,
       gameName,
+      gameMap,
       status,
       tier,
       maxTeam,

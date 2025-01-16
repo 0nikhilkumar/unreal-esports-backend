@@ -5,6 +5,7 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { Team } from "../models/team.model.js";
 import { Room } from "../models/room.model.js";
+import { Leaderboard } from "../models/leaderboard.model.js";
 
 const generateTokens = async (id) => {
   const user = await User.findById(id);
@@ -263,6 +264,10 @@ export const getAllUserJoinedRooms = async (req, res) => {
       populate: {
         path: "hostId",
         select: "preferredName"
+      },
+      populate:{
+        path:"joinedTeam.teamId",
+        select:"teamName"
       }
     });
 
@@ -288,7 +293,15 @@ export const getHostRoomById = async (req, res) =>{
       throw new Api_Error(400,null, "User not found");
     }
 
-    const getRoom = await Room.findById(id);
+    const getRoom = await Room.findById(id).populate({
+      path: "joinedTeam.teamId",
+      select: "_id ",
+      populate: {
+        path: "userId",
+        select:"_id"
+      }
+    });
+
     if(!getRoom){
       throw new Api_Error(400,null, "Room not found");
     }
@@ -379,3 +392,34 @@ export const updateTeam = async (req, res) => {
 export const checkAuth = (req, res) => {
   return res.status(200).json({ isAuthenticated: true });
 };
+
+
+export const recentMatchLeaderboard = async (req, res) => {
+  const {roomId} = req.body
+
+  console.log(roomId)
+  
+  if(!roomId){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "RoomId is required"));
+  } 
+
+
+
+  const leaderboard = await Leaderboard.findOne({roomId}).populate(
+    {
+      path: "leaderboardData.teamId",
+      select:"teamName -_id"
+    }
+  )
+
+  if(!leaderboard){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "Leaderboard not found"));
+  }
+
+  return res.status(200).json(new Api_Response(200, leaderboard, "Leaderboard fetched successfully"));
+
+}

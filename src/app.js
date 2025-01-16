@@ -6,7 +6,19 @@ import helmet from "helmet";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { Api_Error } from "./utils/Api_Error.js";
+import client from "prom-client"
 config({ path: "./.env" });
+
+
+// Collect default metrics
+client.collectDefaultMetrics();
+
+// Define a custom metric
+const httpRequestDurationMicroseconds = new client.Histogram({
+  name: 'http_request_duration_ms',
+  help: 'Duration of HTTP requests in ms',
+  labelNames: ['method', 'route', 'status_code'],
+});
 
 const app = express();
 const httpServer = createServer(app);
@@ -48,6 +60,11 @@ io.on('connection', (socket) => {
     leaveRoom(socket, roomId);
   });
 
+  socket.on('slot-update', (data) => {
+    socket.to(data.roomId).emit('slot-updated', data);
+    console.log('Slot assignments updated:', data);
+  });
+
   socket.on('disconnect', () => {
     console.log('Client disconnected');
     for (const roomId in roomUsers) {
@@ -70,6 +87,25 @@ function leaveRoom(socket, roomId) {
   }
 }
 
+// metric
+
+app.use((req, res, next) => {
+  const startEpoch = Date.now();
+  res.on('finish', () => {
+      const responseTimeInMs = Date.now() - startEpoch;
+      httpRequestDurationMicroseconds
+          .labels(req.method, req.route?.path || req.path, res.statusCode)
+          .observe(responseTimeInMs);
+  });
+  next();
+});
+
+// Expose metrics endpoint
+app.get('/metrics', async (req, res) => {
+  res.setHeader('Content-Type', client.register.contentType);
+  res.send(await client.register.metrics());
+});
+
 // NOTE: Middlewares
 app.use(json({ limit: "30kb" }));
 app.use(urlencoded({ extended: true, limit: "16kb" }));
@@ -89,12 +125,10 @@ app.use(cors(corsOptions));
 import hostRouter from "./routes/host.routes.js";
 import roomRouter from "./routes/room.routes.js";
 import userRouter from "./routes/user.routes.js";
-import { validateProtectedToken } from "./middlewares/validateToken.js";
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/rooms", roomRouter);
 app.use("/api/v1/host", hostRouter);
-app.route("/api/v1/validate-token").get( validateProtectedToken);
 
 // centralized error handling
 app.use((err, req, res, next) => {

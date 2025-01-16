@@ -15,7 +15,6 @@ import {
   hostSignupSchema,
 } from "../Validator/hostValidator.middleware.js";
 import { checkAuth } from "../controllers/host.controller.js";
-import { validateProtectedToken } from "../middlewares/validateToken.js";
 
 const router = Router();
 
@@ -30,6 +29,5 @@ router.route("/update-slot/:id").patch(hostVerifyJWT, updateSlotToTeam);
 router.route("/update-leaderboard/:id").patch(hostVerifyJWT, updateLeaderboardData);
 router.route("/get-leadboard-data/:id").get(hostVerifyJWT, getUpdateLeaderboardData);
 
-// router.route("/validate-token").get(hostVerifyJWT, validateProtectedToken);
 
 export default router;

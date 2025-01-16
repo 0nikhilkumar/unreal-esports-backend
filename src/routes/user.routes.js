@@ -11,6 +11,7 @@ import {
   updateTeam,
   getHostRoomById,
   checkAuth,
+  recentMatchLeaderboard,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middlewares.js";
 import zod_validate from "../middlewares/zod_validate.middleware.js";
@@ -18,7 +19,6 @@ import {
   loginSchema,
   signupSchema,
 } from "../Validator/userValidator.middleware.js";
-import { validateProtectedToken } from "../middlewares/validateToken.js";
 
 const router = Router();
 
@@ -35,6 +35,7 @@ router.route("/get-room/:id").get(verifyJWT, getHostRoomById);
 router.route("/create-team").post(verifyJWT, createTeam);
 router.route("/get-team").get(verifyJWT, getUserTeam);
 router.route("/update-team").patch(verifyJWT, updateTeam);
+router.route("/get-leaderboard-data").post(verifyJWT, recentMatchLeaderboard);
 
 
 
