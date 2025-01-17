@@ -177,25 +177,25 @@ export const refreshAccessToken = async (req, res) => {
 export const userJoinRoom = async (req, res) => {
   try {
     const userId = req.user._id;
-    if(!userId){
+    if (!userId) {
       return res
-      .status(400)
-      .json(new Api_Response(400, null, "Unauthorized request"));
+        .status(400)
+        .json(new Api_Response(400, null, "Unauthorized request"));
     }
-    
-    const isUserCreatedTeam = await Team.findOne({userId});
 
-    if(!isUserCreatedTeam){
+    const isUserCreatedTeam = await Team.findOne({ userId });
+
+    if (!isUserCreatedTeam) {
       return res
-      .status(400)
-      .json(new Api_Response(400, null, "Please create team first"));
+        .status(400)
+        .json(new Api_Response(400, null, "Please create a team first"));
     }
 
     const roomId = req.body.id;
-    if(!roomId){
+    if (!roomId) {
       return res
-      .status(400)
-      .json(new Api_Response(400, null, "Please provide roomID"));
+        .status(400)
+        .json(new Api_Response(400, null, "Please provide roomID"));
     }
 
     const userAlreadyInJoinedRooms = await User.findOne({
@@ -205,24 +205,22 @@ export const userJoinRoom = async (req, res) => {
 
     if (userAlreadyInJoinedRooms) {
       return res
-      .status(403)
-      .json(new Api_Response(403, null, "User Already joined this room"));;
-    }
-    else {
+        .status(403)
+        .json(new Api_Response(403, null, "User already joined this room"));
+    } else {
       const user = await User.findByIdAndUpdate(req.user._id, {
         $push: {
           joinedRooms: roomId,
-        }
+        },
       });
-  
-      if(!user){
+
+      if (!user) {
         return res
-        .status(400)
-        .json(new Api_Response(400, null, "User not found"));
+          .status(400)
+          .json(new Api_Response(400, null, "User not found"));
       }
 
-      const getTeam = await Team.findOne({userId: req.user._id});
-
+      const getTeam = await Team.findOne({ userId: req.user._id });
       const addTeamInThatParticularRoom = await Room.findByIdAndUpdate(
         roomId,
         {
@@ -230,13 +228,28 @@ export const userJoinRoom = async (req, res) => {
             joinedTeam: { teamId: getTeam._id },
           },
         },
-        { new: true } 
+        { new: true }
       );
 
-      if(!addTeamInThatParticularRoom){
+      if (!addTeamInThatParticularRoom) {
         return res
-        .status(400)
-        .json(new Api_Response(400, null, "Something went wrong join this room"));  
+          .status(400)
+          .json(new Api_Response(400, null, "Something went wrong joining this room"));
+      }
+
+      // Logic to update `updateTeamTier`
+      const roomHostId = addTeamInThatParticularRoom.hostId;
+      if (roomHostId) {
+        const isHostAlreadyAdded = getTeam.updateTeamTier.some(
+          (tier) => tier.hostId.toString() === roomHostId.toString()
+        );
+
+        if (!isHostAlreadyAdded) {
+          getTeam.updateTeamTier.push({
+            hostId: roomHostId,
+          });
+          await getTeam.save();
+        }
       }
     }
 
@@ -249,6 +262,7 @@ export const userJoinRoom = async (req, res) => {
       .json(new Api_Response(500, "Internal Server Error" || error.message));
   }
 };
+
 
 export const getAllUserJoinedRooms = async (req, res) => {
   try {
@@ -397,15 +411,11 @@ export const checkAuth = (req, res) => {
 export const recentMatchLeaderboard = async (req, res) => {
   const {roomId} = req.body
 
-  console.log(roomId)
-  
   if(!roomId){
     return res
     .status(400)
     .json(new Api_Response(400, "RoomId is required"));
   } 
-
-
 
   const leaderboard = await Leaderboard.findOne({roomId}).populate(
     {
@@ -414,11 +424,11 @@ export const recentMatchLeaderboard = async (req, res) => {
     }
   )
 
-  if(!leaderboard){
-    return res
-    .status(400)
-    .json(new Api_Response(400, "Leaderboard not found"));
-  }
+  // if(!leaderboard){
+  //   return res
+  //   .status(400)
+  //   .json(new Api_Response(400, "Leaderboard not found"));
+  // }
 
   return res.status(200).json(new Api_Response(200, leaderboard, "Leaderboard fetched successfully"));
 

@@ -1,12 +1,16 @@
 import { Router } from "express";
 import {
+  getAllTeamTier,
+  getTeamsByHost,
   getUpdateLeaderboardData,
   login,
   logout,
+  makeTeamTierChanges,
   refreshAccessToken,
   register,
   updateLeaderboardData,
-  updateSlotToTeam
+  updateSlotToTeam,
+  updateTierForHost
 } from "../controllers/host.controller.js";
 import { hostVerifyJWT } from "../middlewares/hostAuth.middleware.js";
 import zod_validate from "../middlewares/zod_validate.middleware.js";
@@ -28,6 +32,10 @@ router.route("/check-auth").get(hostVerifyJWT, checkAuth);
 router.route("/update-slot/:id").patch(hostVerifyJWT, updateSlotToTeam);
 router.route("/update-leaderboard/:id").patch(hostVerifyJWT, updateLeaderboardData);
 router.route("/get-leadboard-data/:id").get(hostVerifyJWT, getUpdateLeaderboardData);
+
+router.route("/joined-teams").get(hostVerifyJWT, getTeamsByHost).patch(hostVerifyJWT, updateTierForHost);
+
+// router.route("/teams/:id").patch(hostVerifyJWT,levelUpTier)
 
 
 export default router;

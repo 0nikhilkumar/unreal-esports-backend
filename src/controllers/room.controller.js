@@ -15,7 +15,6 @@ export const createRoom = async (req, res) => {
     throw new Api_Error(400, "All field are required");
   }
 
-  console.log(req.body);
 
     const existedRoom = await Room.findOne({
       $and: [{ roomName }, { date }, { time }, { tier }],
