@@ -143,7 +143,6 @@ export const refreshAccessToken = async (req, res) => {
         .status(401)
         .json(new Api_Error(401, "Invalid refresh token"));
     }
-    console.log("hlw");
 
     if (bodyRefreshToken !== user?.refreshToken) {
       return res

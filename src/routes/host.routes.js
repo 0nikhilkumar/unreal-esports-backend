@@ -1,11 +1,10 @@
 import { Router } from "express";
 import {
-  getAllTeamTier,
+  checkAuth,
   getTeamsByHost,
   getUpdateLeaderboardData,
   login,
   logout,
-  makeTeamTierChanges,
   refreshAccessToken,
   register,
   updateLeaderboardData,
@@ -18,7 +17,6 @@ import {
   hostLoginSchema,
   hostSignupSchema,
 } from "../Validator/hostValidator.middleware.js";
-import { checkAuth } from "../controllers/host.controller.js";
 
 const router = Router();
 

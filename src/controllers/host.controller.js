@@ -1,12 +1,12 @@
-import { Api_Response } from "../utils/Api_Response.js";
-import { Api_Error } from "../utils/Api_Error.js";
-import { Host } from "../models/host.model.js";
-import { blacklistedtoken } from "../models/blacklistedtoken.model.js";
 import jwt from "jsonwebtoken";
-import { Room } from "../models/room.model.js";
 import mongoose from "mongoose";
+import { blacklistedtoken } from "../models/blacklistedtoken.model.js";
+import { Host } from "../models/host.model.js";
 import { Leaderboard } from "../models/leaderboard.model.js";
+import { Room } from "../models/room.model.js";
 import { Team } from "../models/team.model.js";
+import { Api_Error } from "../utils/Api_Error.js";
+import { Api_Response } from "../utils/Api_Response.js";
 
 const generateTokens = async (id) => {
   const host = await Host.findById(id);
@@ -327,135 +327,6 @@ export const getUpdateLeaderboardData = async (req, res) => {
 export const checkAuth = (req, res) => {
   return res.status(200).json({ isAuthenticated: true });
 };
-
-export const makeTeamTierChanges = async (req, res) => {
-  const hostId = req.user._id;
-  const { teamId, newTier } = req.body;
-
-  if (!teamId || !newTier) {
-    return res
-      .status(400)          
-      .json({ message: "Team ID and new tier are required." });
-  }
-
-  try {
-    // Find all rooms created by the host
-    const rooms = await Room.find({ hostId, "joinedTeam.teamId": teamId });
-
-    if (rooms.length === 0) {
-      return res.status(403).json({
-        message: "You do not have permission to change the tier of this team.",
-      });
-    }
-
-    // Update the team tier for this host in their rooms
-    for (const room of rooms) {
-      room.joinedTeam = room.joinedTeam.map((team) => {
-        if (team.teamId.toString() === teamId) {
-          return { ...team.toObject(), teamTier: newTier };
-        }
-        return team;
-      });
-      await room.save();
-    }
-
-    res.status(200).json({
-      message: "Team tier updated successfully for the host's rooms.",
-      updatedRooms: rooms.map((room) => ({
-        roomId: room._id,
-        joinedTeam: room.joinedTeam.filter(
-          (team) => team.teamId.toString() === teamId
-        ),
-      })),
-    });
-  } catch (error) {
-    console.error("Error updating team tier:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-export const getAllTeamTier = async (req, res) => {
-  const hostId = req.user._id; // Host ID from the authenticated user
-
-  try {
-    // Find all rooms created by the host
-    const rooms = await Room.find({ hostId }).populate({
-      path: "joinedTeam.teamId",
-      model: Team, // Populate team details
-    });
-
-    // Collect all joined teams from the rooms
-    const joinedTeams = [];
-    rooms.forEach((room) => {
-      room.joinedTeam.forEach((team) => {
-        if (team.teamId) {
-          joinedTeams.push({
-            teamId: team.teamId._id,
-            teamName: team.teamId.teamName,
-            teamTier: team.teamTier, // Get host-specific tier
-            slot: team.slot,
-          });
-        }
-      });
-    });
-
-    // Remove duplicates (if the same team joined multiple rooms)
-    const uniqueTeams = joinedTeams.filter(
-      (team, index, self) =>
-        index ===
-        self.findIndex((t) => t.teamId.toString() === team.teamId.toString())
-    );
-
-    res.status(200).json({
-      message: "Host teams with tiers fetched successfully.",
-      teams: uniqueTeams,
-    });
-  } catch (error) {
-    console.error("Error fetching host teams with tiers:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-// export const getAllTeamTier = async (req, res) => {
-//   const hostId = req.user._id; // Host ID from the authenticated user
-
-//   try {
-//     // Find all rooms created by the host
-//     const rooms = await Room.find({ hostId }).populate({
-//       path: "joinedTeam.teamId",
-//       model: Team, // Populate team details
-//     });
-
-//     // Collect all joined teams from the rooms
-//     const joinedTeams = [];
-//     rooms.forEach((room) => {
-//       room.joinedTeam.forEach((team) => {
-//         if (team.teamId) {
-//           joinedTeams.push({
-//             teamId: team.teamId._id,
-//             teamName: team.teamId.teamName,
-//             teamTier: team.teamId.teamTier,
-//             slot: team.slot,
-//           });
-//         }
-//       });
-//     });
-
-//     // Remove duplicates (if the same team joined multiple rooms)
-//     const uniqueTeams = joinedTeams.filter(
-//       (team, index, self) =>
-//         index === self.findIndex((t) => t.teamId.toString() === team.teamId.toString())
-//     );
-
-//     res.status(200).json({
-//       message: "Joined teams fetched successfully.",
-//       teams: uniqueTeams,
-//     });
-//   } catch (error) {
-//     console.error("Error fetching joined teams:", error);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// }
 
 
 export const updateTierForHost = async (req, res) => {
