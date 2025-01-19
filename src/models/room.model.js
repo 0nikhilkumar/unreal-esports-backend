@@ -28,7 +28,6 @@ const roomSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: "Team",
         },
-        teamTier: { type: String, default: "T3" },
         slot: {
           type: String,
         },

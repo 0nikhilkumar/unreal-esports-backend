@@ -1,43 +1,26 @@
 import { Host } from "../models/host.model.js";
+import { Leaderboard } from "../models/leaderboard.model.js";
 import { Room } from "../models/room.model.js";
+import { User } from "../models/user.model.js";
 import { Api_Error } from "../utils/Api_Error.js";
 import { Api_Response } from "../utils/Api_Response.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 export const createRoom = async (req, res) => {
-  const { roomName, date, time, gameName,gameMap, status, tier, maxTeam, prize } =
-    req.body;
+  const {
+    roomName,
+    date,
+    time,
+    gameName,
+    gameMap,
+    status,
+    tier,
+    maxTeam,
+    prize,
+  } = req.body;
   if (
-    [roomName, date, time, gameName, gameMap, status, tier, maxTeam, prize].some(
-      (field) => field?.trim() === ""
-    )
-  ) {
-    throw new Api_Error(400, "All field are required");
-  }
-
-
-    const existedRoom = await Room.findOne({
-      $and: [{ roomName }, { date }, { time }, { tier }],
-    });
-  
-    if (existedRoom) {
-      throw new Api_Error(400, "Room already created");
-    }
-  
-    const roomImageLocalPath = req.file?.path;
-    console.log(roomImageLocalPath);
-    let roomImage = null;
-    if (roomImageLocalPath) {
-      roomImage = await uploadOnCloudinary(roomImageLocalPath, "roomImages");
-  
-      if (!roomImage?.url) {
-        throw new Api_Error(400, "roomImage not uploaded");
-      }
-    }
-  
-    const room = new Room({
+    [
       roomName,
-      image: roomImage?.url || "",
       date,
       time,
       gameName,
@@ -46,31 +29,66 @@ export const createRoom = async (req, res) => {
       tier,
       maxTeam,
       prize,
-      hostId: req.user._id,
-    });
-  
-    const savedRoom = await room.save();
-  
-    if (!savedRoom) {
-      throw new Api_Error(400, "Room not created");
+    ].some((field) => field?.trim() === "")
+  ) {
+    throw new Api_Error(400, "All field are required");
+  }
+
+  const existedRoom = await Room.findOne({
+    $and: [{ roomName }, { date }, { time }, { tier }],
+  });
+
+  if (existedRoom) {
+    throw new Api_Error(400, "Room already created");
+  }
+
+  const roomImageLocalPath = req.file?.path;
+  console.log(roomImageLocalPath);
+  let roomImage = null;
+  if (roomImageLocalPath) {
+    roomImage = await uploadOnCloudinary(roomImageLocalPath, "roomImages");
+
+    if (!roomImage?.url) {
+      throw new Api_Error(400, "roomImage not uploaded");
     }
-  
-    const host = await Host.findByIdAndUpdate(req.user._id, {
-      $push: {
-        roomsCreated: savedRoom._id,
-      },
-    });
-  
-    if (!host) {
-      throw new Api_Error(400, "Host not found");
-    }
-  
-    // host.rooms.push(savedRoom._id);
-    // await host.save();
-  
-    // io.emit("newRoom", room);
-  
-    res.status(201).json(new Api_Response(201, "Room Created Successfully"));
+  }
+
+  const room = new Room({
+    roomName,
+    image: roomImage?.url || "",
+    date,
+    time,
+    gameName,
+    gameMap,
+    status,
+    tier,
+    maxTeam,
+    prize,
+    hostId: req.user._id,
+  });
+
+  const savedRoom = await room.save();
+
+  if (!savedRoom) {
+    throw new Api_Error(400, "Room not created");
+  }
+
+  const host = await Host.findByIdAndUpdate(req.user._id, {
+    $push: {
+      roomsCreated: savedRoom._id,
+    },
+  });
+
+  if (!host) {
+    throw new Api_Error(400, "Host not found");
+  }
+
+  // host.rooms.push(savedRoom._id);
+  // await host.save();
+
+  // io.emit("newRoom", room);
+
+  res.status(201).json(new Api_Response(201, "Room Created Successfully"));
 };
 
 export const getHostRooms = async (req, res) => {
@@ -128,7 +146,10 @@ export const getHostRoomById = async (req, res) => {
       throw new Api_Error(400, "Host not found");
     }
 
-    const getRoom = await Room.findOne({ _id: id, hostId: req.user._id }).populate("joinedTeam.teamId");
+    const getRoom = await Room.findOne({
+      _id: id,
+      hostId: req.user._id,
+    }).populate("joinedTeam.teamId");
     if (!getRoom) {
       throw new Api_Error(400, "Room not found");
     }
@@ -219,18 +240,20 @@ export const getAllHostRooms = async (req, res) => {
 };
 
 export const updateStatus = async (req, res) => {
-  const { id } = req.params; 
+  const { id } = req.params;
   const { status } = req.body;
-  
+
   if (!id || !status) {
-    return res.status(400).json(new Api_Response(400, "Please provide the id and status"));
+    return res
+      .status(400)
+      .json(new Api_Response(400, "Please provide the id and status"));
   }
 
   try {
     const roomStatus = await Room.findByIdAndUpdate(
-      id, 
+      id,
       { status },
-      { new: true } 
+      { new: true }
     );
 
     if (!roomStatus) {
@@ -239,8 +262,49 @@ export const updateStatus = async (req, res) => {
 
     return res
       .status(200)
-      .json(new Api_Response(200, roomStatus, "Room Status Updated Successfully"));
+      .json(
+        new Api_Response(200, roomStatus, "Room Status Updated Successfully")
+      );
   } catch (error) {
     throw new Api_Error(400, error.message);
+  }
+};
+
+export const deleteRoom = async (req, res) => {
+  const { id } = req.params;
+
+  // Check if roomId is provided
+  if (!id) {
+    return res.status(400).json(new Api_Error(400,"Room ID not found"));
+  }
+
+  try {
+    // Attempt to delete the room
+    const room = await Room.findByIdAndDelete(id);
+
+    if (!room) {
+      return res.status(404).json(new Api_Error(404, "Room not found"));
+    }
+
+    // Remove roomId from related models
+    await Promise.all([
+      User.updateMany({ roomId: id }, { $unset: { roomId: 1 } }),
+      Host.updateMany({ roomId: id }, { $unset: { roomId: 1 } }),
+      Leaderboard.updateMany({ roomId: id }, { $unset: { roomId: 1 } }),
+    ]);
+
+    return res
+      .status(200)
+      .json(
+        new Api_Response(
+          200,
+          "All Room are deleted successfully"
+        )
+      );
+  } catch (error) {
+    console.error("Error deleting room or references:", error);
+    return res
+      .status(500)
+      .json(new Api_Error(500, "Internal server error"));
   }
 };

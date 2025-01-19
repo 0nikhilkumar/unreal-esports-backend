@@ -17,6 +17,7 @@ import {
   hostLoginSchema,
   hostSignupSchema,
 } from "../Validator/hostValidator.middleware.js";
+import { deleteRoom } from "../controllers/room.controller.js";
 
 const router = Router();
 
@@ -33,7 +34,6 @@ router.route("/get-leadboard-data/:id").get(hostVerifyJWT, getUpdateLeaderboardD
 
 router.route("/joined-teams").get(hostVerifyJWT, getTeamsByHost).patch(hostVerifyJWT, updateTierForHost);
 
-// router.route("/teams/:id").patch(hostVerifyJWT,levelUpTier)
-
+router.route("/delete-room/:id").delete(hostVerifyJWT,deleteRoom)
 
 export default router;
