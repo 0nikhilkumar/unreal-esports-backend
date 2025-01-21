@@ -21,6 +21,7 @@ const httpRequestDurationMicroseconds = new client.Histogram({
 });
 
 const app = express();
+
 const httpServer = createServer(app);
 export const io = new Server(httpServer, {
   cors: {
@@ -125,6 +126,7 @@ app.use(cors(corsOptions));
 import hostRouter from "./routes/host.routes.js";
 import roomRouter from "./routes/room.routes.js";
 import userRouter from "./routes/user.routes.js";
+import { sendMail } from "./utils/nodemailer.js";
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/rooms", roomRouter);

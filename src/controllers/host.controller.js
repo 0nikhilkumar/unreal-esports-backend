@@ -7,6 +7,7 @@ import { Room } from "../models/room.model.js";
 import { Team } from "../models/team.model.js";
 import { Api_Error } from "../utils/Api_Error.js";
 import { Api_Response } from "../utils/Api_Response.js";
+import crypto from "crypto"
 
 const generateTokens = async (id) => {
   const host = await Host.findById(id);
@@ -436,3 +437,19 @@ export const getTeamsByHost = async (req, res) => {
     });
   }
 };
+
+export const getHostEmailVerify = async(req, res) => {
+  const hostId = req.user._id;
+  if(!hostId){
+    throw new Api_Error(400, "unauthorized request");
+  }
+
+  const host = await Host.findById(hostId);
+  
+  if(!host){
+    throw new Api_Error(404, "Host not found");
+  }
+
+  const opt = crypto.randomBytes(6);
+  
+}
