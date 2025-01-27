@@ -20,10 +20,11 @@ import {
   signupSchema,
 } from "../Validator/userValidator.middleware.js";
 
+
 const router = Router();
 
 router.route("/signup").post(zod_validate(signupSchema), userSignup);
-router.route("/login").post(zod_validate(loginSchema), userLogin);
+router.route("/login").post(userLogin);
 router.route("/refresh").post(refreshAccessToken);
 router.route("/logout").get(verifyJWT, logout);
 router.route("/check-auth").get(verifyJWT, checkAuth);
