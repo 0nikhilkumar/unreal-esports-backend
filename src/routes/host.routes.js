@@ -18,6 +18,7 @@ import {
   hostSignupSchema,
 } from "../Validator/hostValidator.middleware.js";
 import { deleteRoom } from "../controllers/room.controller.js";
+import { checkUsernameUnique } from "../controllers/user.controller.js";
 
 const router = Router();
 
@@ -34,6 +35,8 @@ router.route("/get-leadboard-data/:id").get(hostVerifyJWT, getUpdateLeaderboardD
 
 router.route("/joined-teams").get(hostVerifyJWT, getTeamsByHost).patch(hostVerifyJWT, updateTierForHost);
 
-router.route("/delete-room/:id").delete(hostVerifyJWT,deleteRoom)
+router.route("/delete-room/:id").delete(hostVerifyJWT,deleteRoom);
+
+router.route("/check-username").get(checkUsernameUnique);
 
 export default router;

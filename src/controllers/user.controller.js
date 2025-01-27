@@ -406,7 +406,6 @@ export const checkAuth = (req, res) => {
   return res.status(200).json({ isAuthenticated: true });
 };
 
-
 export const recentMatchLeaderboard = async (req, res) => {
   const {roomId} = req.body
 
@@ -431,5 +430,25 @@ export const recentMatchLeaderboard = async (req, res) => {
 
   return res.status(200).json(new Api_Response(200, leaderboard, "Leaderboard fetched successfully"));
 
-}
+};
 
+export const checkUsernameUnique = async (req, res) => {
+
+  const {username} = req.query;
+
+  if(!username){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "Username is required"));
+  }
+
+  const user = await User.findOne({username});
+
+  if(user){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "Username already exists"));
+  }
+
+  return res.status(200).json(new Api_Response(200, "Username is unique"));
+};

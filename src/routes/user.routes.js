@@ -12,6 +12,7 @@ import {
   getHostRoomById,
   checkAuth,
   recentMatchLeaderboard,
+  checkUsernameUnique,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middlewares.js";
 import zod_validate from "../middlewares/zod_validate.middleware.js";
@@ -37,6 +38,8 @@ router.route("/create-team").post(verifyJWT, createTeam);
 router.route("/get-team").get(verifyJWT, getUserTeam);
 router.route("/update-team").patch(verifyJWT, updateTeam);
 router.route("/get-leaderboard-data").post(verifyJWT, recentMatchLeaderboard);
+
+router.route("/check-username").get(checkUsernameUnique);
 
 
 
