@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   checkAuth,
+  checkHostnameUnique,
   getTeamsByHost,
   getUpdateLeaderboardData,
   login,
@@ -18,7 +19,6 @@ import {
   hostSignupSchema,
 } from "../Validator/hostValidator.middleware.js";
 import { deleteRoom } from "../controllers/room.controller.js";
-import { checkUsernameUnique } from "../controllers/user.controller.js";
 
 const router = Router();
 
@@ -37,6 +37,6 @@ router.route("/joined-teams").get(hostVerifyJWT, getTeamsByHost).patch(hostVerif
 
 router.route("/delete-room/:id").delete(hostVerifyJWT,deleteRoom);
 
-router.route("/check-username").get(checkUsernameUnique);
+router.route("/check-host-username").get(checkHostnameUnique);
 
 export default router;

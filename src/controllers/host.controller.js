@@ -474,3 +474,24 @@ export const checkUsernameUnique = async (req, res) => {
 
   return res.status(200).json(new Api_Response(200, "Username is unique"));
 };
+
+export const checkHostnameUnique = async (req, res) => {
+
+  const {username} = req.query;
+
+  if(!username){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "Username is required"));
+  }
+
+  const user = await Host.findOne({username});
+
+  if(user){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "Username already exists"));
+  }
+
+  return res.status(200).json(new Api_Response(200, "Username is unique"));
+};
