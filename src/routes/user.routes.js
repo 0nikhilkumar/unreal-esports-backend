@@ -13,6 +13,10 @@ import {
   checkAuth,
   recentMatchLeaderboard,
   checkUsernameUnique,
+  sendOTPToEmail,
+  sendOTPToEmailForForgotPassword,
+  verifyOTPForForgotPassword,
+  forgotPassword,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middlewares.js";
 import zod_validate from "../middlewares/zod_validate.middleware.js";
@@ -24,7 +28,8 @@ import {
 
 const router = Router();
 
-router.route("/signup").post(zod_validate(signupSchema), userSignup);
+router.route("/send-otp-to-email").post(sendOTPToEmail);
+router.route("/signup").post(userSignup);
 router.route("/login").post(userLogin);
 router.route("/refresh").post(refreshAccessToken);
 router.route("/logout").get(verifyJWT, logout);
@@ -40,6 +45,10 @@ router.route("/update-team").patch(verifyJWT, updateTeam);
 router.route("/get-leaderboard-data").post(verifyJWT, recentMatchLeaderboard);
 
 router.route("/check-username").get(checkUsernameUnique);
+
+router.route("/send-otp-for-forgot-password").post(verifyJWT, sendOTPToEmailForForgotPassword);
+router.route("/verify-otp-for-forgot-password").post(verifyJWT, verifyOTPForForgotPassword);
+router.route("/forgot-password").patch(verifyJWT, forgotPassword);
 
 
 

@@ -8,6 +8,7 @@ import { Team } from "../models/team.model.js";
 import { Api_Error } from "../utils/Api_Error.js";
 import { Api_Response } from "../utils/Api_Response.js";
 import crypto from "crypto"
+import { Otp } from "../models/otp.model.js";
 
 const generateTokens = async (id) => {
   const host = await Host.findById(id);
@@ -20,9 +21,12 @@ const generateTokens = async (id) => {
   return { accessToken, refreshToken };
 };
 
+
 export const register = async (req, res) => {
   try {
-    const { username, email, password, preferredName } = req.body;
+    const { username, email, password, preferredName, otp } = req.body;
+
+    console.log(username, email, password, preferredName, otp);
 
     if (!username || !email || !password || !preferredName) {
       return res.json(new Api_Response(400, "Please fill all the fields"));
@@ -34,6 +38,12 @@ export const register = async (req, res) => {
 
     if (isHostExisted) {
       return res.json(new Api_Response(403, "Host already exists"));
+    }
+
+    const getOtp = await Otp.findOne({email});
+
+    if(!getOtp || getOtp.otp !== otp){
+      return res.status(403).json(new Api_Response(403, "Invalid OTP"));
     }
 
     const host = await Host.create({
@@ -454,7 +464,7 @@ export const getHostEmailVerify = async(req, res) => {
   
 };
 
-export const checkUsernameUnique = async (req, res) => {
+export const checkHostnameUnique = async (req, res) => {
 
   const {username} = req.query;
 
@@ -475,23 +485,117 @@ export const checkUsernameUnique = async (req, res) => {
   return res.status(200).json(new Api_Response(200, "Username is unique"));
 };
 
-export const checkHostnameUnique = async (req, res) => {
 
-  const {username} = req.query;
-
-  if(!username){
-    return res
-    .status(400)
-    .json(new Api_Response(400, "Username is required"));
+export const sendOTPToEmailForForgotPassword = async (req, res) => {
+  const userId = req.user._id;
+  if(!userId){
+    throw new Api_Error(400, "unauthorized request");
   }
 
-  const user = await Host.findOne({username});
+  const { email } = req.body;
 
-  if(user){
-    return res
-    .status(400)
-    .json(new Api_Response(400, "Username already exists"));
+  if (!email) {
+    return res.status(400).json(new Api_Response(400, "Email is required"));
   }
 
-  return res.status(200).json(new Api_Response(200, "Username is unique"));
+  const host = await Host.findById(userId);
+
+  if (!host) {
+    return res.status(404).json(new Api_Response(404, "Host not found"));
+  }
+
+  if(host.email !== email){
+    return res.status(403).json(new Api_Response(403, "Email does not match with the registered email"));
+  }
+
+  const otp = crypto.randomInt(1000, 9999).toString();
+    try {
+      const emailResponse = await sendMail(email, otp, host.username, "forgot");
+      if (emailResponse) {
+        const otpCreated = await Otp.create({
+          email,
+          otp,
+          type: "password",
+        });
+  
+        if(!otpCreated){
+          return res
+          .status(500)
+          .json(new Api_Error(500, "Internal Server Error")); 
+        }
+  
+        return res
+          .status(200)
+          .json(new Api_Response(200, null, "OTP sent successfully"));
+      }
+    } catch (error) {
+      return res
+        .status(500)
+        .json(new Api_Error(500, "Internal Server Error" || error.message));
+    }
+};
+
+export const verifyOTPForForgotPassword = async (req, res) => {
+  const userId = req.user._id;
+  if(!userId){
+    throw new Api_Error(400, "unauthorized request");
+  }
+
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res
+      .status(400)
+      .json(new Api_Response(400, "Email and OTP are required"));
+  }
+
+  const host = await Host.findById(userId);
+
+  if(host.email !== email){
+    return res.status(403).json(new Api_Response(403, "Email does not match with the registered email"));
+  }
+
+  const getOtp = await Otp.findOne({email});
+
+  if(!getOtp || getOtp.otp !== otp){
+    return res.status(403).json(new Api_Response(403, "Invalid OTP"));
+  }
+
+  return res.status(200).json(new Api_Response(200, null, "OTP verified successfully"));
+};
+
+export const forgotPassword = async (req, res) => {
+  const userId = req.user._id;
+  if(!userId){
+    throw new Api_Error(400, "unauthorized request");
+  }
+
+  const { email, password, confirmPassword } = req.body;
+
+  if (!email || !password || !confirmPassword) {
+    return res
+      .status(400)
+      .json(new Api_Response(400, "Email, password and confirm password are required"));
+  }
+
+  if (password !== confirmPassword) {
+    return res
+      .status(400)
+      .json(new Api_Response(400, "Password and confirm password does not match"));
+  }
+
+  const host = await Host.findById(userId);
+
+  if (!host) {
+    return res.status(404).json(new Api_Response(404, "Host not found"));
+  }
+
+  if(host.email !== email){
+    return res.status(403).json(new Api_Response(403, "Email does not match with the registered email"));
+  }
+
+  host.password = password;
+  await host.save();
+
+  return res.status(200).json(new Api_Response(200, null, "Password updated successfully"));
 };

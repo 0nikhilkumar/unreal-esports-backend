@@ -6,6 +6,9 @@ import jwt from "jsonwebtoken";
 import { Team } from "../models/team.model.js";
 import { Room } from "../models/room.model.js";
 import { Leaderboard } from "../models/leaderboard.model.js";
+import crypto from "crypto";
+import { sendMail } from "../utils/nodemailer.js";
+import { Otp } from "../models/otp.model.js";
 
 const generateTokens = async (id) => {
   const user = await User.findById(id);
@@ -18,20 +21,98 @@ const generateTokens = async (id) => {
   return { accessToken, refreshToken };
 };
 
+export const sendOTPToEmail = async (req, res) => {
+  const { email, username } = req.body;
+  if (!email || !username) {
+    return res
+      .status(400)
+      .json(new Api_Response(400, "Please provide email and username"));
+  }
+
+  const isUserExisted = await User.findOne({ email });
+  if (isUserExisted) {
+    return res
+      .status(400)
+      .json(new Api_Response(400, "User already exists with this email"));
+  }
+
+  const otp = crypto.randomInt(1000, 9999).toString();
+  try {
+    const emailResponse = await sendMail(email, otp, username, "Sign Up");
+    if (emailResponse) {
+      const otpCreated = await Otp.create({
+        email,
+        otp,
+        type: "signup",
+      });
+
+      if(!otpCreated){
+        return res
+        .status(500)
+        .json(new Api_Error(500, "Internal Server Error")); 
+      }
+
+      return res
+        .status(200)
+        .json(new Api_Response(200, null, "OTP sent successfully"));
+    }
+  } catch (error) {
+    return res
+      .status(500)
+      .json(new Api_Error(500, "Internal Server Error" || error.message));
+  }
+}
+
 export const userSignup = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, otp } = req.body;
 
-    if (!username || !email || !password) {
-      return res.json(new Api_Response(400, "Please fill all the fields"));
+    if (!username || !email || !password || !otp) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Please fill all the fields",
+        data: null
+      });
     }
 
     const isUserExisted = await User.findOne({
       $or: [{ username }, { email }],
     });
 
-    if(isUserExisted){
-      return res.json(new Api_Response(403, "User already exists"));
+    if (isUserExisted) {
+      return res.status(403).json({
+        statusCode: 403,
+        success: false,
+        message: "User already exists",
+        data: null
+      });
+    }
+
+    const isOtpVerified = await Otp.findOne({ 
+      email: email 
+    }).sort({ createdAt: -1 });
+
+
+    if (!isOtpVerified) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Your OTP is expired",
+        data: null
+      });
+    }
+
+    const receivedOtp = otp.toString();
+    const storedOtp = isOtpVerified.otp.toString();
+
+    if (receivedOtp !== storedOtp) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Please provide valid OTP",
+        data: null
+      });
     }
 
     const user = await User.create({
@@ -42,17 +123,30 @@ export const userSignup = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(403).json(new Api_Response(403, "User is not created"));
+      return res.status(403).json({
+        statusCode: 403,
+        success: false,
+        message: "User is not created",
+        data: null
+      });
     }
 
-    return res
-      .status(201)
-      .json(new Api_Response(201, "User registered successfully"));
+    await Otp.deleteOne({ _id: isOtpVerified._id });
+
+    return res.status(201).json({
+      statusCode: 201,
+      success: true,
+      message: "User registered successfully",
+      data: null
+    });
 
   } catch (error) {
-    return res
-      .status(500)
-      .json(new Api_Error(500, error.message || "Something went wrong"));
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: error.message || "Something went wrong",
+      data: null
+    });
   }
 };
 
@@ -451,4 +545,120 @@ export const checkUsernameUnique = async (req, res) => {
   }
 
   return res.status(200).json(new Api_Response(200, "Username is unique"));
+};
+
+
+export const sendOTPToEmailForForgotPassword = async (req, res) => {
+  const userId = req.user._id;
+  if(!userId){
+    throw new Api_Error(400, "unauthorized request");
+  }
+
+  const { email } = req.body;
+  console.log(email);
+
+  if (!email) {
+    return res.status(400).json(new Api_Response(400, "Email is required"));
+  }
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json(new Api_Response(404, "User not found"));
+  }
+
+  if(user.email !== email){
+    return res.status(403).json(new Api_Response(403, "Email does not match with the user"));
+  }
+
+  const otp = crypto.randomInt(1000, 9999).toString();
+    try {
+      const emailResponse = await sendMail(email, otp, user.username, "forgot");
+      if (emailResponse) {
+        const otpCreated = await Otp.create({
+          email,
+          otp,
+          type: "password",
+        });
+  
+        if(!otpCreated){
+          return res
+          .status(500)
+          .json(new Api_Error(500, "Internal Server Error")); 
+        }
+  
+        return res
+          .status(200)
+          .json(new Api_Response(200, null, "OTP sent successfully"));
+      }
+    } catch (error) {
+      return res
+        .status(500)
+        .json(new Api_Error(500, "Internal Server Error" || error.message));
+    }
+};
+
+export const verifyOTPForForgotPassword = async (req, res) => {
+  const userId = req.user._id;
+  if(!userId){
+    throw new Api_Error(400, "unauthorized request");
+  }
+
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res
+      .status(400)
+      .json(new Api_Response(400, "Email and OTP are required"));
+  }
+
+  const user = await User.findById(userId);
+
+  if(user.email !== email){
+    return res.status(403).json(new Api_Response(403, "Email does not match with the user"));
+  }
+
+  const getOtp = await Otp.findOne({email});
+
+  if(!getOtp || getOtp.otp !== otp){
+    return res.status(403).json(new Api_Response(403, "Invalid OTP"));
+  }
+
+  return res.status(200).json(new Api_Response(200, null, "OTP verified successfully"));
+};
+
+export const forgotPassword = async (req, res) => {
+  const userId = req.user._id;
+  if(!userId){
+    throw new Api_Error(400, "unauthorized request");
+  }
+
+  const { email, password, confirmPassword } = req.body;
+
+  if (!email || !password || !confirmPassword) {
+    return res
+      .status(400)
+      .json(new Api_Response(400, "Email, password and confirm password are required"));
+  }
+
+  if (password !== confirmPassword) {
+    return res
+      .status(400)
+      .json(new Api_Response(400, "Password and confirm password does not match"));
+  }
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return res.status(404).json(new Api_Response(404, "User not found"));
+  }
+
+  if(user.email !== email){
+    return res.status(403).json(new Api_Response(403, "Email does not match with the user"));
+  }
+
+  user.password = password;
+  await user.save();
+
+  return res.status(200).json(new Api_Response(200, null, "Password updated successfully"));
 };

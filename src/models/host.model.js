@@ -6,6 +6,7 @@ const hostSchema = new Schema(
   {
     preferredName: {
         type: String,
+        unique: true,
         required: [true, "Preferred name is required"],
     },
     username: {

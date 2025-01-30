@@ -241,7 +241,9 @@ export const sendMail = async (email, otp, username, status) => {
     if(!info){
         return console.error({message:"Email Sent Error on line: 285"});
     }
-    console.log("Email Sent Successfully: %s", info.messageId);
+    // console.log(info);
+    // console.log("Email Sent Successfully: %s", info.messageId);
+    return info;
   } catch (error) {
     console.log(error);
   }
