@@ -5,10 +5,6 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { Team } from "../models/team.model.js";
 import { Room } from "../models/room.model.js";
-import { Leaderboard } from "../models/leaderboard.model.js";
-import crypto from "crypto";
-import { sendMail } from "../utils/nodemailer.js";
-import { Otp } from "../models/otp.model.js";
 
 const generateTokens = async (id) => {
   const user = await User.findById(id);
@@ -21,98 +17,20 @@ const generateTokens = async (id) => {
   return { accessToken, refreshToken };
 };
 
-export const sendOTPToEmail = async (req, res) => {
-  const { email, username } = req.body;
-  if (!email || !username) {
-    return res
-      .status(400)
-      .json(new Api_Response(400, "Please provide email and username"));
-  }
-
-  const isUserExisted = await User.findOne({ email });
-  if (isUserExisted) {
-    return res
-      .status(400)
-      .json(new Api_Response(400, "User already exists with this email"));
-  }
-
-  const otp = crypto.randomInt(1000, 9999).toString();
-  try {
-    const emailResponse = await sendMail(email, otp, username, "Sign Up");
-    if (emailResponse) {
-      const otpCreated = await Otp.create({
-        email,
-        otp,
-        type: "signup",
-      });
-
-      if(!otpCreated){
-        return res
-        .status(500)
-        .json(new Api_Error(500, "Internal Server Error")); 
-      }
-
-      return res
-        .status(200)
-        .json(new Api_Response(200, null, "OTP sent successfully"));
-    }
-  } catch (error) {
-    return res
-      .status(500)
-      .json(new Api_Error(500, "Internal Server Error" || error.message));
-  }
-}
-
 export const userSignup = async (req, res) => {
   try {
-    const { username, email, password, otp } = req.body;
+    const { username, email, password } = req.body;
 
-    if (!username || !email || !password || !otp) {
-      return res.status(400).json({
-        statusCode: 400,
-        success: false,
-        message: "Please fill all the fields",
-        data: null
-      });
+    if (!username || !email || !password) {
+      return res.json(new Api_Response(400, "Please fill all the fields"));
     }
 
     const isUserExisted = await User.findOne({
       $or: [{ username }, { email }],
     });
 
-    if (isUserExisted) {
-      return res.status(403).json({
-        statusCode: 403,
-        success: false,
-        message: "User already exists",
-        data: null
-      });
-    }
-
-    const isOtpVerified = await Otp.findOne({ 
-      email: email 
-    }).sort({ createdAt: -1 });
-
-
-    if (!isOtpVerified) {
-      return res.status(400).json({
-        statusCode: 400,
-        success: false,
-        message: "Your OTP is expired",
-        data: null
-      });
-    }
-
-    const receivedOtp = otp.toString();
-    const storedOtp = isOtpVerified.otp.toString();
-
-    if (receivedOtp !== storedOtp) {
-      return res.status(400).json({
-        statusCode: 400,
-        success: false,
-        message: "Please provide valid OTP",
-        data: null
-      });
+    if(isUserExisted){
+      return res.json(new Api_Response(403, "User already exists"));
     }
 
     const user = await User.create({
@@ -123,30 +41,17 @@ export const userSignup = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(403).json({
-        statusCode: 403,
-        success: false,
-        message: "User is not created",
-        data: null
-      });
+      return res.status(403).json(new Api_Response(403, "User is not created"));
     }
 
-    await Otp.deleteOne({ _id: isOtpVerified._id });
-
-    return res.status(201).json({
-      statusCode: 201,
-      success: true,
-      message: "User registered successfully",
-      data: null
-    });
+    return res
+      .status(201)
+      .json(new Api_Response(201, "User registered successfully"));
 
   } catch (error) {
-    return res.status(500).json({
-      statusCode: 500,
-      success: false,
-      message: error.message || "Something went wrong",
-      data: null
-    });
+    return res
+      .status(500)
+      .json(new Api_Error(500, error.message || "Something went wrong"));
   }
 };
 
@@ -187,10 +92,8 @@ export const userLogin = async (req, res) => {
   return res
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json(new Api_Response(200,{accessToken, user: getUser}, "User login successfully"));
+    .json(new Api_Response(200, getUser, "User login successfully"));
 };
-
-
 
 export const logout = async (req, res) => {
   await User.findByIdAndUpdate(
@@ -220,37 +123,6 @@ export const logout = async (req, res) => {
     .json(new Api_Response(200, null, "User logged Out"));
 };
 
-
-export const getUserProfile = async(req,res) =>{
-  const user = await User.findById(req.user._id).select("-password -refreshToken");
-  if(!user){
-    return res
-    .status(400)
-    .json(new Api_Response(400, "User not found"));
-  }
-
-  return res.json(new Api_Response(200, user, "User profile fetched successfully"));
-}
-
-export const updateUserProfile = async(req,res) =>{
-  const {firstName, lastName, contact} = req.body;
-
-  if(!firstName || !lastName || !contact){
-    return res
-    .status(400)
-    .json(new Api_Response(400, "Please provide all the fields"));
-  }
-
-  const user = await User.findByIdAndUpdate(req.user._id, { firstName, lastName, contact },{new: true});
-
-  if(!user){ 
-    return res.json(new Api_Response(400, null, "User not updated"));
-  }
-
-  return res.json(new Api_Response(200, null, "User profile updated successfully"));
-
-}
-
 export const refreshAccessToken = async (req, res) => {
   const bodyRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
@@ -270,6 +142,7 @@ export const refreshAccessToken = async (req, res) => {
         .status(401)
         .json(new Api_Error(401, "Invalid refresh token"));
     }
+    console.log("hlw");
 
     if (bodyRefreshToken !== user?.refreshToken) {
       return res
@@ -300,28 +173,29 @@ export const refreshAccessToken = async (req, res) => {
   }
 };
 
+
 export const userJoinRoom = async (req, res) => {
   try {
     const userId = req.user._id;
-    if (!userId) {
+    if(!userId){
       return res
-        .status(400)
-        .json(new Api_Response(400, null, "Unauthorized request"));
+      .status(400)
+      .json(new Api_Response(400, null, "Unauthorized request"));
     }
+    
+    const isUserCreatedTeam = await Team.findOne({userId});
 
-    const isUserCreatedTeam = await Team.findOne({ userId });
-
-    if (!isUserCreatedTeam) {
+    if(!isUserCreatedTeam){
       return res
-        .status(400)
-        .json(new Api_Response(400, null, "Please create a team first"));
+      .status(400)
+      .json(new Api_Response(400, null, "Please create team first"));
     }
 
     const roomId = req.body.id;
-    if (!roomId) {
+    if(!roomId){
       return res
-        .status(400)
-        .json(new Api_Response(400, null, "Please provide roomID"));
+      .status(400)
+      .json(new Api_Response(400, null, "Please provide roomID"));
     }
 
     const userAlreadyInJoinedRooms = await User.findOne({
@@ -331,51 +205,34 @@ export const userJoinRoom = async (req, res) => {
 
     if (userAlreadyInJoinedRooms) {
       return res
-        .status(403)
-        .json(new Api_Response(403, null, "User already joined this room"));
-    } else {
+      .status(403)
+      .json(new Api_Response(403, null, "User Already joined this room"));;
+    }
+    else {
       const user = await User.findByIdAndUpdate(req.user._id, {
         $push: {
           joinedRooms: roomId,
-        },
+        }
+      });
+  
+      if(!user){
+        return res
+        .status(400)
+        .json(new Api_Response(400, null, "User not found"));
+      }
+
+      const getTeam = await Team.findOne({userId: req.user._id});
+
+      const addTeamInThatParticularRoom = await Room.findByIdAndUpdate(roomId, {
+        $push: {
+          joinedTeam: getTeam._id,
+        }
       });
 
-      if (!user) {
+      if(!addTeamInThatParticularRoom){
         return res
-          .status(400)
-          .json(new Api_Response(400, null, "User not found"));
-      }
-
-      const getTeam = await Team.findOne({ userId: req.user._id });
-      const addTeamInThatParticularRoom = await Room.findByIdAndUpdate(
-        roomId,
-        {
-          $push: {
-            joinedTeam: { teamId: getTeam._id },
-          },
-        },
-        { new: true }
-      );
-
-      if (!addTeamInThatParticularRoom) {
-        return res
-          .status(400)
-          .json(new Api_Response(400, null, "Something went wrong joining this room"));
-      }
-
-      // Logic to update `updateTeamTier`
-      const roomHostId = addTeamInThatParticularRoom.hostId;
-      if (roomHostId) {
-        const isHostAlreadyAdded = getTeam.updateTeamTier.some(
-          (tier) => tier.hostId.toString() === roomHostId.toString()
-        );
-
-        if (!isHostAlreadyAdded) {
-          getTeam.updateTeamTier.push({
-            hostId: roomHostId,
-          });
-          await getTeam.save();
-        }
+        .status(400)
+        .json(new Api_Response(400, null, "Something went wrong join this room"));  
       }
     }
 
@@ -388,7 +245,6 @@ export const userJoinRoom = async (req, res) => {
       .json(new Api_Response(500, "Internal Server Error" || error.message));
   }
 };
-
 
 export const getAllUserJoinedRooms = async (req, res) => {
   try {
@@ -404,13 +260,8 @@ export const getAllUserJoinedRooms = async (req, res) => {
       populate: {
         path: "hostId",
         select: "preferredName"
-      },
-      populate:{
-        path:"joinedTeam.teamId",
-        select:"teamName"
       }
     });
-
     return res
       .status(200)
       .json(new Api_Response(200, joinedRooms, "All Rooms Fetched Successfully"));
@@ -433,15 +284,7 @@ export const getHostRoomById = async (req, res) =>{
       throw new Api_Error(400,null, "User not found");
     }
 
-    const getRoom = await Room.findById(id).populate({
-      path: "joinedTeam.teamId",
-      select: "_id ",
-      populate: {
-        path: "userId",
-        select:"_id"
-      }
-    });
-
+    const getRoom = await Room.findById(id);
     if(!getRoom){
       throw new Api_Error(400,null, "Room not found");
     }
@@ -525,247 +368,5 @@ export const updateTeam = async (req, res) => {
   }, {new: true});
 
 
-  res.status(201).json(new Api_Response(201, null, "Team updated successfully"));
-};
-
-export const updateSocialMediaLink = async (req, res) => {
-  try {
-    const userId  = req.user;  // Assuming userId is extracted from JWT
-    const { socialMedia } = req.body;
-
-    console.log(userId)
-    // Check if userId exists in req.user
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized. User ID not found." });
-    }
-
-    // Validate request body: socialMedia should be an array with at least one entry
-    if (!Array.isArray(socialMedia) || socialMedia.length === 0) {
-      return res.status(400).json({ message: "Invalid social media data. Array is empty." });
-    }
-
-    // Validate each entry in the socialMedia array
-    const allowedPlatforms = ["instagram", "youtube", "twitter"];
-    for (const item of socialMedia) {
-      if (!item.platform || !allowedPlatforms.includes(item.platform)) {
-        return res.status(400).json({
-          message: `Invalid platform: ${item.platform}. Allowed values: ${allowedPlatforms.join(", ")}`,
-        });
-      }
-      if (!item.url || typeof item.url !== "string" || !/^https?:\/\/.+$/.test(item.url)) {
-        return res.status(400).json({ message: "Each social media entry must have a valid URL." });
-      }
-    }
-
-    // Update the user's social media links in the database
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { socialMedia },  // Only update the socialMedia field
-      { new: true, runValidators: true }  // Ensure validation is applied during update
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json({
-      message: "Social media links updated successfully",
-      socialMedia: updatedUser.socialMedia,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-
-export const getSocialMediaLinks = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select('socialMedia');
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    const socialMediaLinks = user.socialMedia.map(link => ({
-      platform: link.platform,
-      url: link.url
-    }));
-
-    res.status(200).json({
-      socialMedia: socialMediaLinks
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      message: 'Error fetching social media links', 
-      error: error.message 
-    });
-  }
-};
-
-
-export const checkAuth = (req, res) => {
-  return res.status(200).json({ isAuthenticated: true });
-};
-
-export const recentMatchLeaderboard = async (req, res) => {
-  const {roomId} = req.body
-
-  if(!roomId){
-    return res
-    .status(400)
-    .json(new Api_Response(400, "RoomId is required"));
-  } 
-
-  const leaderboard = await Leaderboard.findOne({roomId}).populate(
-    {
-      path: "leaderboardData.teamId",
-      select:"teamName -_id"
-    }
-  )
-
-  // if(!leaderboard){
-  //   return res
-  //   .status(400)
-  //   .json(new Api_Response(400, "Leaderboard not found"));
-  // }
-
-  return res.status(200).json(new Api_Response(200, leaderboard, "Leaderboard fetched successfully"));
-
-};
-
-export const checkUsernameUnique = async (req, res) => {
-
-  const {username} = req.query;
-
-  if(!username){
-    return res
-    .status(400)
-    .json(new Api_Response(400, "Username is required"));
-  }
-
-  const user = await User.findOne({username});
-
-  if(user){
-    return res
-    .status(400)
-    .json(new Api_Response(400, "Username already exists"));
-  }
-
-  return res.status(200).json(new Api_Response(200, "Username is unique"));
-};
-
-
-export const sendOTPToEmailForForgotPassword = async (req, res) => {
-  const userId = req.user._id;
-  if(!userId){
-    throw new Api_Error(400, "unauthorized request");
-  }
-
-  const { email } = req.body;
-  console.log(email);
-
-  if (!email) {
-    return res.status(400).json(new Api_Response(400, "Email is required"));
-  }
-
-  const user = await User.findById(userId);
-
-  if (!user) {
-    return res.status(404).json(new Api_Response(404, "User not found"));
-  }
-
-  if(user.email !== email){
-    return res.status(403).json(new Api_Response(403, "Email does not match with the user"));
-  }
-
-  const otp = crypto.randomInt(1000, 9999).toString();
-    try {
-      const emailResponse = await sendMail(email, otp, user.username, "forgot");
-      if (emailResponse) {
-        const otpCreated = await Otp.create({
-          email,
-          otp,
-          type: "password",
-        });
-  
-        if(!otpCreated){
-          return res
-          .status(500)
-          .json(new Api_Error(500, "Internal Server Error")); 
-        }
-  
-        return res
-          .status(200)
-          .json(new Api_Response(200, null, "OTP sent successfully"));
-      }
-    } catch (error) {
-      return res
-        .status(500)
-        .json(new Api_Error(500, "Internal Server Error" || error.message));
-    }
-};
-
-export const verifyOTPForForgotPassword = async (req, res) => {
-  const userId = req.user._id;
-  if(!userId){
-    throw new Api_Error(400, "unauthorized request");
-  }
-
-  const { email, otp } = req.body;
-
-  if (!email || !otp) {
-    return res
-      .status(400)
-      .json(new Api_Response(400, "Email and OTP are required"));
-  }
-
-  const user = await User.findById(userId);
-
-  if(user.email !== email){
-    return res.status(403).json(new Api_Response(403, "Email does not match with the user"));
-  }
-
-  const getOtp = await Otp.findOne({email});
-
-  if(!getOtp || getOtp.otp !== otp){
-    return res.status(403).json(new Api_Response(403, "Invalid OTP"));
-  }
-
-  return res.status(200).json(new Api_Response(200, null, "OTP verified successfully"));
-};
-
-export const forgotPassword = async (req, res) => {
-  const userId = req.user._id;
-  if(!userId){
-    throw new Api_Error(400, "unauthorized request");
-  }
-
-  const { email, password, confirmPassword } = req.body;
-
-  if (!email || !password || !confirmPassword) {
-    return res
-      .status(400)
-      .json(new Api_Response(400, "Email, password and confirm password are required"));
-  }
-
-  if (password !== confirmPassword) {
-    return res
-      .status(400)
-      .json(new Api_Response(400, "Password and confirm password does not match"));
-  }
-
-  const user = await User.findById(userId);
-
-  if (!user) {
-    return res.status(404).json(new Api_Response(404, "User not found"));
-  }
-
-  if(user.email !== email){
-    return res.status(403).json(new Api_Response(403, "Email does not match with the user"));
-  }
-
-  user.password = password;
-  await user.save();
-
-  return res.status(200).json(new Api_Response(200, null, "Password updated successfully"));
+  res.status(201).json({ message: "Team Updated successfully"});
 };

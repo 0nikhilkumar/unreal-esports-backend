@@ -1,88 +1,69 @@
 import mongoose from "mongoose";
 
-const roomSchema = new mongoose.Schema(
-  {
-    roomName: {
-      type: String,
-      required: true,
-    },
+const roomSchema = new mongoose.Schema({
+  roomName: {
+    type: String,
+    required: true,
+  },
 
-    image: {
-      type: String,
-    },
+  image: {
+    type: String,
+  },
 
-    date: {
-      type: String,
-      required: true,
-    },
+  date: {
+    type: String,
+    required: true,
+  },
 
-    time: {
-      type: String,
-      required: true,
-    },
+  time: {
+    type: String,
+    required: true,
+  },
 
-    joinedTeam: [
-      {
-        _id: false,
-        teamId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Team",
-        },
-        slot: {
-          type: String,
-        },
-      },
-    ],
+  joinedTeam: [
+    {
+      type:mongoose.Schema.Types.ObjectId,
+      ref:'User'
+    }
+  ],
 
-    gameName: {
-      type: String,
-      required: true,
-    },
+  gameName: {
+    type: String,
+    required: true,
+  },
 
-    gameMap:{
-      type: String,
-      required: true,
-    },
-    
-    status: {
-      type: String,
-      enum: ["Open", "Closed", "Live", "Upcoming"],
-      default: "Upcoming",
-    },
+  status: {
+    type: String,
+    enum: ["Open", "Closed", "Live", "Upcoming"],
+    default: "Upcoming",
+  },
 
-    tier: {
-      type: String,
-      enum: ["T3", "T2", "T1"],
-      default: "T3",
-    },
+  tier: {
+    type: String,
+    enum: ["T3", "T2", "T1"],
+    default: "T3",
+  },
 
-    maxTeam: {
-      type: Number,
-      required: true,
-    },
+  maxTeam: {
+    type: Number,
+    required: true,
+  },
 
-    prize: {
-      type: Number,
-    },
-    idp: {
+  prize: {
+    type: Number,
+  },
+  idp: {
       id: {
         type: String,
       },
       password: {
         type: String,
       },
-    },
-    hostId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Host",
-    },
-    leaderboard: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Leaderboard",
-    },
-
   },
-  { timestamps: true }
-);
+  hostId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Host",
+  },
+});
 
 export const Room = mongoose.model("Room", roomSchema);

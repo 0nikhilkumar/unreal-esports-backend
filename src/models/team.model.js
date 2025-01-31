@@ -1,5 +1,6 @@
 import mongoose, { model, Schema } from "mongoose";
 
+// Team Schema
 const teamSchema = new Schema({
   teamName: {
     type: String,
@@ -9,8 +10,6 @@ const teamSchema = new Schema({
   },
   players: [
     {
-      _id:false,
-      
       playerNumber: {
         type: Number,
         required: true,
@@ -40,26 +39,9 @@ const teamSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
-
-  updateTeamTier:[
-    {
-      hostId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Host",
-      },
-      tier:{
-        type: String,
-        enum: ["T3", "T2", "T1"],
-        default: "T3"
-      },
-      _id:false
-    }
-  ]
-
-
 });
 
-
+// Create Partial Indexes in MongoDB for the players subdocument
 teamSchema.index(
   { "players.ign": 1 },
   { unique: true, partialFilterExpression: { "players.ign": { $ne: null } } }
