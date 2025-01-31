@@ -5,9 +5,9 @@ import jwt from "jsonwebtoken";
 const hostSchema = new Schema(
   {
     preferredName: {
-        type: String,
-        unique: true,
-        required: [true, "Preferred name is required"],
+      type: String,
+      unique: true,
+      required: [true, "Preferred name is required"],
     },
     username: {
       type: String,
@@ -28,15 +28,40 @@ const hostSchema = new Schema(
       type: String,
       required: [true, "Password is required"],
     },
-    
+
+    firstName: {
+      type: String,
+    },
+    lastName: {
+      type: String,
+    },
+    contact: {
+      type: String,
+    },
+    socialMedia: [
+      {
+        platform: {
+          type: String,
+          enum: ["instagram", "youtube", "twitter"],
+          required: true,
+        },
+        url: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+
     refreshToken: {
       type: String,
     },
 
-    roomsCreated: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Room"
-    }]
+    roomsCreated: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Room",
+      },
+    ],
   },
   {
     timestamps: true,
@@ -60,7 +85,7 @@ hostSchema.methods.generateAccessToken = function () {
       _id: this._id,
       username: this.username,
       email: this.email,
-      preferredName: this.preferredName
+      preferredName: this.preferredName,
     },
     process.env.ACCESS_TOKEN_SECRET_KEY,
     {

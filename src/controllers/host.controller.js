@@ -137,6 +137,111 @@ export const logout = async (req, res) => {
     .json(new Api_Response(200, null, "Host logged Out"));
 };
 
+export const updateHostProfile = async(req,res) =>{
+  const {firstName, lastName, contact} = req.body;
+
+
+  if(!firstName || !lastName || !contact){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "Please provide all the fields"));
+  }
+
+  const host = await Host.findByIdAndUpdate(req.user._id, { firstName, lastName, contact },{new: true});
+
+  if(!host){ 
+    return res.json(new Api_Response(400, null, "Host not updated"));
+  }
+
+  return res.json(new Api_Response(200, null, "Host profile updated successfully"));
+
+}
+
+export const getHostProfile = async(req,res) =>{
+  const user = await Host.findById(req.user._id).select("-password -refreshToken");
+  if(!user){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "Host not found"));
+  }
+
+  return res.json(new Api_Response(200, user, "Host profile fetched successfully"));
+}
+
+export const updateHostSocialMediaLink = async (req, res) => {
+  try {
+    const hostId  = req.user;  // Assuming userId is extracted from JWT
+    const { socialMedia } = req.body;
+
+    console.log(hostId)
+    // Check if userId exists in req.user
+    if (!hostId) {
+      return res.status(401).json({ message: "Unauthorized. User ID not found." });
+    }
+
+    // Validate request body: socialMedia should be an array with at least one entry
+    if (!Array.isArray(socialMedia) || socialMedia.length === 0) {
+      return res.status(400).json({ message: "Invalid social media data. Array is empty." });
+    }
+
+    // Validate each entry in the socialMedia array
+    const allowedPlatforms = ["instagram", "youtube", "twitter"];
+    for (const item of socialMedia) {
+      if (!item.platform || !allowedPlatforms.includes(item.platform)) {
+        return res.status(400).json({
+          message: `Invalid platform: ${item.platform}. Allowed values: ${allowedPlatforms.join(", ")}`,
+        });
+      }
+      if (!item.url || typeof item.url !== "string" || !/^https?:\/\/.+$/.test(item.url)) {
+        return res.status(400).json({ message: "Each social media entry must have a valid URL." });
+      }
+    }
+
+    // Update the user's social media links in the database
+    const updatedHost = await Host.findByIdAndUpdate(
+      hostId,
+      { socialMedia },  // Only update the socialMedia field
+      { new: true, runValidators: true }  // Ensure validation is applied during update
+    );
+
+    if (!updatedHost) {
+      return res.status(404).json({ message: "Host not found" });
+    }
+
+    res.status(200).json({
+      message: "Social media links updated successfully",
+      socialMedia: updatedHost.socialMedia,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+export const getHostSocialMediaLinks = async (req, res) => {
+  try {
+    const user = await Host.findById(req.user.id).select('socialMedia');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const socialMediaLinks = user.socialMedia.map(link => ({
+      platform: link.platform,
+      url: link.url
+    }));
+
+    res.status(200).json({
+      socialMedia: socialMediaLinks
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error fetching social media links', 
+      error: error.message 
+    });
+  }
+};
+
 export const refreshAccessToken = async (req, res) => {
   const bodyRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 

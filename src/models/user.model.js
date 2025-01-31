@@ -12,6 +12,19 @@ const userSchema = new Schema(
       lowercase: true,
       trim: true,
     },
+
+    firstName: {
+      type: String,
+    },
+
+    lastName: {
+      type: String,
+    },
+
+    contact: {
+      type: String,
+    },
+
     email: {
       type: String,
       required: true,
@@ -19,21 +32,41 @@ const userSchema = new Schema(
       lowercase: true,
       trim: true,
     },
+
     password: {
       type: String,
       required: [true, "Password is required"],
     },
+
     isVerified: {
       type: Boolean,
       default: false,
     },
+
+    socialMedia: [
+      {
+        platform: {
+          type: String,
+          enum: ["instagram", "youtube", "twitter"],
+          required: true,
+        },
+        url: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+
     refreshToken: {
       type: String,
     },
-    joinedRooms: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Room"
-    }],
+
+    joinedRooms: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Room",
+      },
+    ],
   },
   {
     timestamps: true,

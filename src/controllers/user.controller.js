@@ -190,6 +190,8 @@ export const userLogin = async (req, res) => {
     .json(new Api_Response(200,{accessToken, user: getUser}, "User login successfully"));
 };
 
+
+
 export const logout = async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
@@ -217,6 +219,37 @@ export const logout = async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(new Api_Response(200, null, "User logged Out"));
 };
+
+
+export const getUserProfile = async(req,res) =>{
+  const user = await User.findById(req.user._id).select("-password -refreshToken");
+  if(!user){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "User not found"));
+  }
+
+  return res.json(new Api_Response(200, user, "User profile fetched successfully"));
+}
+
+export const updateUserProfile = async(req,res) =>{
+  const {firstName, lastName, contact} = req.body;
+
+  if(!firstName || !lastName || !contact){
+    return res
+    .status(400)
+    .json(new Api_Response(400, "Please provide all the fields"));
+  }
+
+  const user = await User.findByIdAndUpdate(req.user._id, { firstName, lastName, contact },{new: true});
+
+  if(!user){ 
+    return res.json(new Api_Response(400, null, "User not updated"));
+  }
+
+  return res.json(new Api_Response(200, null, "User profile updated successfully"));
+
+}
 
 export const refreshAccessToken = async (req, res) => {
   const bodyRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
@@ -492,7 +525,81 @@ export const updateTeam = async (req, res) => {
   }, {new: true});
 
 
-  res.status(201).json({ message: "Team Updated successfully"});
+  res.status(201).json(new Api_Response(201, null, "Team updated successfully"));
+};
+
+export const updateSocialMediaLink = async (req, res) => {
+  try {
+    const userId  = req.user;  // Assuming userId is extracted from JWT
+    const { socialMedia } = req.body;
+
+    console.log(userId)
+    // Check if userId exists in req.user
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized. User ID not found." });
+    }
+
+    // Validate request body: socialMedia should be an array with at least one entry
+    if (!Array.isArray(socialMedia) || socialMedia.length === 0) {
+      return res.status(400).json({ message: "Invalid social media data. Array is empty." });
+    }
+
+    // Validate each entry in the socialMedia array
+    const allowedPlatforms = ["instagram", "youtube", "twitter"];
+    for (const item of socialMedia) {
+      if (!item.platform || !allowedPlatforms.includes(item.platform)) {
+        return res.status(400).json({
+          message: `Invalid platform: ${item.platform}. Allowed values: ${allowedPlatforms.join(", ")}`,
+        });
+      }
+      if (!item.url || typeof item.url !== "string" || !/^https?:\/\/.+$/.test(item.url)) {
+        return res.status(400).json({ message: "Each social media entry must have a valid URL." });
+      }
+    }
+
+    // Update the user's social media links in the database
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { socialMedia },  // Only update the socialMedia field
+      { new: true, runValidators: true }  // Ensure validation is applied during update
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Social media links updated successfully",
+      socialMedia: updatedUser.socialMedia,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+export const getSocialMediaLinks = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('socialMedia');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const socialMediaLinks = user.socialMedia.map(link => ({
+      platform: link.platform,
+      url: link.url
+    }));
+
+    res.status(200).json({
+      socialMedia: socialMediaLinks
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error fetching social media links', 
+      error: error.message 
+    });
+  }
 };
 
 

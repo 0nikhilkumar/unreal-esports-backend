@@ -2,12 +2,16 @@ import { Router } from "express";
 import {
   checkAuth,
   checkHostnameUnique,
+  getHostProfile,
+  getHostSocialMediaLinks,
   getTeamsByHost,
   getUpdateLeaderboardData,
   login,
   logout,
   refreshAccessToken,
   register,
+  updateHostProfile,
+  updateHostSocialMediaLink,
   updateLeaderboardData,
   updateSlotToTeam,
   updateTierForHost
@@ -27,7 +31,11 @@ router.route("/login").post(zod_validate(hostLoginSchema), login);
 router.route("/refresh").post(refreshAccessToken);
 router.route("/logout").get(hostVerifyJWT, logout);
 router.route("/check-auth").get(hostVerifyJWT, checkAuth);
+router.route("/get-host-profile").get(hostVerifyJWT, getHostProfile);
+router.route("/update-host-profile").patch(hostVerifyJWT, updateHostProfile);
 
+router.route("/get-host-socialMedia-links").get(hostVerifyJWT, getHostSocialMediaLinks);
+router.route("/update-host-socialMedia-links").patch(hostVerifyJWT, updateHostSocialMediaLink);
 
 router.route("/update-slot/:id").patch(hostVerifyJWT, updateSlotToTeam);
 router.route("/update-leaderboard/:id").patch(hostVerifyJWT, updateLeaderboardData);
