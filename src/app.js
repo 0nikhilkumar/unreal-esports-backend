@@ -4,9 +4,9 @@ import { config } from "dotenv";
 import express, { json, urlencoded } from "express";
 import helmet from "helmet";
 import { createServer } from "http";
+import client from "prom-client";
 import { Server } from "socket.io";
 import { Api_Error } from "./utils/Api_Error.js";
-import client from "prom-client"
 config({ path: "./.env" });
 
 
@@ -23,13 +23,7 @@ const httpRequestDurationMicroseconds = new client.Histogram({
 const app = express();
 
 const httpServer = createServer(app);
-export const io = new Server(httpServer, {
-  cors: {
-    origin: ["http://localhost:5173", "*", "https://unrealesports-g6rtbxo4a-soulpredator0s-projects.vercel.app/"],
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    credentials: true,
-  },
-});
+export const io = new Server(httpServer);
 
 
 const roomUsers = {};
@@ -115,7 +109,7 @@ app.use(express.static("public"));
 app.use(helmet());
 
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: ["http://localhost:5173", "https://unrealesports-g6rtbxo4a-soulpredator0s-projects.vercel.app/"],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true,
 };
@@ -126,7 +120,6 @@ app.use(cors(corsOptions));
 import hostRouter from "./routes/host.routes.js";
 import roomRouter from "./routes/room.routes.js";
 import userRouter from "./routes/user.routes.js";
-import { sendMail } from "./utils/nodemailer.js";
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/rooms", roomRouter);
