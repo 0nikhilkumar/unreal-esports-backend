@@ -30,7 +30,7 @@ router.route("/register").post(register);
 router.route("/login").post(zod_validate(hostLoginSchema), login);
 router.route("/refresh").post(refreshAccessToken);
 router.route("/logout").get(hostVerifyJWT, logout);
-router.route("/check-auth").get(hostVerifyJWT, checkAuth);
+router.route("/check-auth").get(checkAuth);
 router.route("/get-host-profile").get(hostVerifyJWT, getHostProfile);
 router.route("/update-host-profile").patch(hostVerifyJWT, updateHostProfile);
 

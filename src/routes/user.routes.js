@@ -40,7 +40,7 @@ router.route("/update-user-profile").patch(verifyJWT,updateUserProfile);
 
 router.route("/refresh").post(refreshAccessToken);
 router.route("/logout").get(verifyJWT, logout);
-router.route("/check-auth").get(verifyJWT, checkAuth);
+router.route("/check-auth").get(checkAuth);
 
 router.route("/join-room").patch(verifyJWT, userJoinRoom);
 router.route("/joined-rooms").get(verifyJWT, getAllUserJoinedRooms);
