@@ -23,7 +23,16 @@ const httpRequestDurationMicroseconds = new client.Histogram({
 const app = express();
 
 const httpServer = createServer(app);
-export const io = new Server(httpServer);
+export const io = new Server(httpServer, {
+  cors: {
+    origin: [process.env.FRONTEND_URL, "http://localhost:5173"],
+    credentials: true,
+    maxAge: 3600,
+    sameSite: "none",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    headers: ["Content-Type", "Authorization"],
+  }
+});
 
 
 const roomUsers = {};
@@ -112,6 +121,8 @@ app.use(helmet());
 app.use(cors({
   origin: [process.env.FRONTEND_URL, "http://localhost:5173"],
   credentials: true,
+  maxAge: 3600,
+  sameSite: "none",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
