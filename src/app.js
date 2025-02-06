@@ -123,8 +123,7 @@ app.use(cors({
   credentials: true,
   maxAge: 3600,
   sameSite: "none",
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  secure: true
 }));
 
 // INFO: Routes Import
