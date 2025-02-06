@@ -108,13 +108,13 @@ app.use(cookieParser());
 app.use(express.static("public"));
 app.use(helmet());
 
-const corsOptions = {
-  origin: ["http://localhost:5173", "https://unrealesports-g6rtbxo4a-soulpredator0s-projects.vercel.app/"],
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  credentials: true,
-};
 
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: [process.env.FRONTEND_URL, "http://localhost:5173"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
 // INFO: Routes Import
 import hostRouter from "./routes/host.routes.js";
